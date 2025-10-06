@@ -136,18 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ثبت سرویس ورکر
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => {
-          console.log('Service Worker registered:', reg.scope);
-        })
-        .catch(err => {
-          console.error('Service Worker error:', err);
-        });
-    });
-  } else {
-    console.log('Service Worker پشتیبانی نمی‌شود');
-  }
-});
+ // ثبت سرویس ورکر در GitHub Pages
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js')
+    .then(() => console.log('✅ Service Worker registered successfully'))
+    .catch(err => console.warn('Service Worker error:', err));
+}
+
+
