@@ -1,81 +1,51 @@
 class NotesManager {
   constructor() {
     this.notes = [];
-    console.log('NotesManager ایجاد شد');
-    this.initDB();
-  }
-
-  async initDB() {
-    try {
-      console.log('در حال مقداردهی اولیه IndexedDB...');
-      await this.loadNotes();
-      console.log('IndexedDB با موفقیت مقداردهی اولیه شد');
-    } catch (error) {
-      console.error('خطا در مقداردهی اولیه IndexedDB:', error);
-    }
+    this.loadNotes();
   }
 
   async loadNotes() {
-    try {
-      console.log('در حال بارگذاری یادداشت‌ها...');
-      const keys = await idbKeyval.keys();
-      this.notes = [];
-      for (const key of keys) {
-        if (key.startsWith('note_')) {
-          const note = await idbKeyval.get(key);
-          this.notes.push(note);
-        }
+    const keys = await idbKeyval.keys();
+    this.notes = [];
+    for (const key of keys) {
+      if (key.startsWith('note_')) {
+        const note = await idbKeyval.get(key);
+        this.notes.push(note);
       }
-      console.log('یادداشت‌های موجود:', this.notes);
-      
-      const notesContainer = document.getElementById('notes-container');
-      if (notesContainer) {
-        notesContainer.innerHTML = 
-          this.notes.length ? this.notes.map(note => this.renderNote(note)).join('') 
-          : '<p>یادداشتی یافت نشد</p>';
-      }
-    } catch (error) {
-      console.error('خطا در بارگذاری یادداشت‌ها:', error);
     }
+    this.displayNotes();
   }
 
   async addNote(bookId, cfiRange, text, note) {
-    try {
-      console.log('در حال افزودن یادداشت جدید...');
-      const noteId = `note_${Date.now()}`;
-      const noteData = {
-        id: noteId,
-        bookId,
-        cfiRange,
-        text,
-        note,
-        createdAt: new Date().toISOString()
-      };
-
-      await idbKeyval.set(noteId, noteData);
-      this.notes.push(noteData);
-      console.log('یادداشت با موفقیت ذخیره شد:', noteData);
-      
-      this.loadNotes();
-      
-      // هایلایت متن
-      if (window.epubManager && window.epubManager.rendition) {
-        window.epubManager.highlightText(cfiRange);
-      }
-    } catch (error) {
-      console.error('خطا در افزودن یادداشت:', error);
-      throw error;
+    const id = `note_${Date.now()}`;
+    const newNote = {
+      id,
+      bookId,
+      cfiRange,
+      text,
+      note,
+      date: new Date().toLocaleString('fa-IR')
+    };
+    await idbKeyval.set(id, newNote);
+    this.notes.push(newNote);
+    this.displayNotes();
+    if (window.epubManager) {
+      window.epubManager.highlightText(cfiRange);
     }
   }
 
-  renderNote(note) {
-    return `
-      <div class="note-item">
-        <div class="note-text">${note.text}</div>
-        <div class="note-meta">${note.note || ''}</div>
-        <small>${new Date(note.createdAt).toLocaleDateString('fa-IR')}</small>
-      </div>
-    `;
+  async displayNotes() {
+    const container = document.getElementById('notes-container');
+    if (!container) return;
+    container.innerHTML = this.notes.length
+      ? this.notes.map(n => `
+        <div class="note-item fade-in">
+          <div class="note-text">${n.text}</div>
+          <div class="note-meta">${n.note || ''}</div>
+          <small>${n.date}</small>
+        </div>
+      `).join('')
+      : '<p>یادداشتی ثبت نشده است.</p>';
   }
 }
 
