@@ -1,6 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
   console.log('اپلیکیشن شروع به کار کرد');
   
+  // بررسی وجود کتابخانه‌های مورد نیاز
+  if (typeof ePub === 'undefined') {
+    console.error('خطا: کتابخانه epub.js بارگذاری نشده');
+    alert('خطا در بارگذاری کتابخانه‌ها. لطفاً صفحه را رفرش کنید.');
+    return;
+  }
+  
+  if (typeof idbKeyval === 'undefined') {
+    console.error('خطا: کتابخانه idb-keyval بارگذاری نشده');
+    alert('خطا در بارگذاری کتابخانه‌ها. لطفاً صفحه را رفرش کنید.');
+    return;
+  }
+  
   // عناصر DOM
   const uploadBtn = document.getElementById('upload-btn');
   const bookUpload = document.getElementById('book-upload');
@@ -13,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // بررسی وجود عناصر
   if (!uploadBtn || !bookUpload || !booksContainer || !readerSection || !backBtn || !addNoteBtn || !notesPanel) {
-    console.error('یکی از عناصر DOM یافت نشد');
+    console.error('خطا: یکی از عناصر DOM یافت نشد');
     return;
   }
 
@@ -28,18 +41,32 @@ document.addEventListener('DOMContentLoaded', () => {
   bookUpload.addEventListener('change', async (e) => {
     console.log('فایل انتخاب شد');
     const file = e.target.files[0];
-    if (file && file.type === 'application/epub+zip') {
-      try {
-        console.log('در حال بارگذاری کتاب...');
-        await window.epubManager.loadBook(file);
-        console.log('کتاب با موفقیت بارگذاری شد');
-        showReader();
-      } catch (error) {
-        console.error('خطا در بارگذاری کتاب:', error);
-        alert('خطا در بارگذاری کتاب: ' + error.message);
-      }
-    } else {
+    
+    if (!file) {
+      console.log('هیچ فایلی انتخاب نشد');
+      return;
+    }
+    
+    if (file.type !== 'application/epub+zip') {
       alert('لطفاً یک فایل EPUB معتبر انتخاب کنید');
+      return;
+    }
+    
+    try {
+      console.log('در حال بارگذاری کتاب...');
+      
+      // بررسی وجود epubManager
+      if (!window.epubManager) {
+        throw new Error('اپلیکیشن آماده نیست. لطفاً صفحه را رفرش کنید.');
+      }
+      
+      await window.epubManager.loadBook(file);
+      console.log('کتاب با موفقیت بارگذاری شد');
+      showReader();
+      
+    } catch (error) {
+      console.error('خطا در بارگذاری کتاب:', error);
+      alert(`خطا در بارگذاری کتاب: ${error.message}`);
     }
   });
 
@@ -72,11 +99,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (note !== null) {
       try {
         console.log('در حال افزودن یادداشت...');
+        
+        if (!window.notesManager) {
+          throw new Error('مدیریت یادداشت‌ها آماده نیست');
+        }
+        
         await window.notesManager.addNote('current-book', cfiRange, text, note);
         console.log('یادداشت با موفقیت افزوده شد');
+        
       } catch (error) {
         console.error('خطا در افزودن یادداشت:', error);
-        alert('خطا در افزودن یادداشت: ' + error.message);
+        alert(`خطا در افزودن یادداشت: ${error.message}`);
       }
     }
   });
@@ -103,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ثبت سرویس ورکر (کد اصلاح شده)
+  // ثبت سرویس ورکر
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./service-worker.js')
