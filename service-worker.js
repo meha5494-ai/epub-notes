@@ -1,13 +1,16 @@
 const CACHE_NAME = 'epub-notes-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/js/main.js',
-  '/js/epub-manager.js',
-  '/js/notes-manager.js',
-  '/libs/epub.min.js',
-  '/libs/idb-keyval.min.js'
+  './',
+  './index.html',
+  './styles.css',
+  './manifest.json',
+  './js/main.js',
+  './js/epub-manager.js',
+  './js/notes-manager.js',
+  './libs/epub.min.js',
+  './libs/idb-keyval.min.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 // نصب سرویس ورکر و کش کردن فایل‌ها
