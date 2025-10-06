@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   console.log('اپلیکیشن شروع به کار کرد');
   
   // بررسی وجود کتابخانه‌های مورد نیاز
@@ -142,5 +142,6 @@ if ('serviceWorker' in navigator) {
     .then(() => console.log('✅ Service Worker registered successfully'))
     .catch(err => console.warn('Service Worker error:', err));
 }
+
 
 
