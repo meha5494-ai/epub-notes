@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مدیریت کتاب و یادداشت‌ها</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- هدر -->
+    <header>
+      <h1>کتابخانه شخصی</h1>
+      <button id="install-btn">نصب اپلیکیشن</button>
+    </header>
+
+    <!-- بخش آپلود کتاب -->
+    <section class="upload-section">
+      <input type="file" id="book-upload" accept=".epub" hidden>
+      <button id="upload-btn">آپلود کتاب جدید</button>
+    </section>
+
+    <!-- لیست کتاب‌ها -->
+    <section class="book-list">
+      <h2>کتاب‌های من</h2>
+      <div id="books-container"></div>
+    </section>
+
+    <!-- بخش خواندن کتاب -->
+    <section id="reader-section" class="hidden">
+      <div class="reader-controls">
+        <button id="back-btn">بازگشت</button>
+        <button id="add-note-btn">افزودن یادداشت</button>
+      </div>
+      <div id="viewer"></div>
+    </section>
+
+    <!-- پنل یادداشت‌ها -->
+    <section id="notes-panel" class="hidden">
+      <h3>یادداشت‌های کتاب</h3>
+      <div id="notes-container"></div>
+    </section>
+  </div>
+
+  <!-- اسکریپت‌ها -->
+  <script src="libs/epub.min.js"></script>
+  <script src="libs/idb-keyval.min.js"></script>
+  <script src="js/epub-manager.js"></script>
+  <script src="js/notes-manager.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
