@@ -2,18 +2,18 @@
   "name": "مدیریت کتاب و یادداشت‌ها",
   "short_name": "EpubNotes",
   "description": "اپلیکیشن وب آفلاین برای مدیریت کتاب‌های EPUB و یادداشت‌ها",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#4a6fa5",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
