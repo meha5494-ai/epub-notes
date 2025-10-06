@@ -5,20 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>مدیریت کتاب و یادداشت‌ها</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <noscript>
+    <div style="text-align: center; padding: 20px; background: #ffdddd; color: #d8000c;">
+      برای استفاده از این اپلیکیشن، جاوااسکریپت باید فعال باشد.
+    </div>
+  </noscript>
+
   <div class="app-container">
     <!-- هدر -->
     <header>
       <h1>کتابخانه شخصی</h1>
-      <button id="install-btn">نصب اپلیکیشن</button>
+      <button id="install-btn" type="button">نصب اپلیکیشن</button>
     </header>
 
     <!-- بخش آپلود کتاب -->
     <section class="upload-section">
       <input type="file" id="book-upload" accept=".epub" hidden>
-      <button id="upload-btn">آپلود کتاب جدید</button>
+      <button id="upload-btn" type="button">آپلود کتاب جدید</button>
     </section>
 
     <!-- لیست کتاب‌ها -->
@@ -30,8 +37,8 @@
     <!-- بخش خواندن کتاب -->
     <section id="reader-section" class="hidden">
       <div class="reader-controls">
-        <button id="back-btn">بازگشت</button>
-        <button id="add-note-btn">افزودن یادداشت</button>
+        <button id="back-btn" type="button">بازگشت</button>
+        <button id="add-note-btn" type="button">افزودن یادداشت</button>
       </div>
       <div id="viewer"></div>
     </section>
