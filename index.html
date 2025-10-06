@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>مدیریت کتاب و یادداشت‌ها</title>
+
+  <!-- فایل‌های PWA -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
+
+  <!-- استایل اصلی -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -50,11 +54,27 @@
     </section>
   </div>
 
-  <!-- اسکریپت‌ها -->
+  <!-- ====================== 📚 اسکریپت‌ها ====================== -->
+
+  <!-- 💡 این خط ضروریه تا خطای JSZip lib not loaded برطرف بشه -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <!-- کتابخانه‌های موردنیاز -->
   <script src="libs/epub.min.js"></script>
   <script src="libs/idb-keyval.min.js"></script>
+
+  <!-- فایل‌های اصلی پروژه -->
   <script src="js/epub-manager.js"></script>
   <script src="js/notes-manager.js"></script>
   <script src="js/main.js"></script>
+
+  <!-- 📦 ثبت سرویس‌ورکر -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log('✅ Service Worker registered successfully'))
+        .catch(err => console.warn('Service Worker error:', err));
+    }
+  </script>
 </body>
 </html>
