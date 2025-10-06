@@ -8,7 +8,6 @@ class NotesManager {
   async initDB() {
     try {
       console.log('در حال مقداردهی اولیه IndexedDB...');
-      // نیازی به ایجاد Store نیست، idbKeyval به صورت خودکار از پایگاه داده پیش‌فرض استفاده می‌کند
       await this.loadNotes();
       console.log('IndexedDB با موفقیت مقداردهی اولیه شد');
     } catch (error) {
@@ -19,7 +18,6 @@ class NotesManager {
   async loadNotes() {
     try {
       console.log('در حال بارگذاری یادداشت‌ها...');
-      // دریافت تمام کلیدها از پایگاه داده
       const keys = await idbKeyval.keys();
       this.notes = [];
       for (const key of keys) {
