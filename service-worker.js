@@ -1,4 +1,4 @@
-const CACHE_NAME = 'epub-notes-cache-v3';
+const CACHE_NAME = 'epub-notes-cache-v2';
 const urlsToCache = [
     './', 
     'index.html',
@@ -18,9 +18,6 @@ self.addEventListener('install', event => {
                 console.log('Opened cache');
                 return cache.addAll(urlsToCache);
             })
-            .catch(error => {
-                console.error('Cache failed:', error);
-            })
     );
 });
 
@@ -31,23 +28,7 @@ self.addEventListener('fetch', event => {
                 if (response) {
                     return response;
                 }
-                return fetch(event.request)
-                    .then(response => {
-                        // Don't cache non-successful responses
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-                        
-                        // Clone the response since it's a stream
-                        const responseToCache = response.clone();
-                        
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
-                        
-                        return response;
-                    });
+                return fetch(event.request);
             })
     );
 });
@@ -61,8 +42,7 @@ self.addEventListener('activate', event => {
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
                         return caches.delete(cacheName);
                     }
-                    return null;
-                }).filter(Boolean)
+                })
             );
         })
     );
