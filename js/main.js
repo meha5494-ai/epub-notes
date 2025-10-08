@@ -18,6 +18,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let books = [];
 
+    // اطمینان از وجود دکمه بازگشت و افزودن رویداد کلیک
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            console.log('Back button clicked');
+            readerView.classList.remove('active');
+            libraryView.classList.add('active');
+        });
+    } else {
+        console.error('Back button not found');
+    }
+
     uploadBtn.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', async e => {
@@ -72,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function openBook(book) {
+        console.log('Opening book:', book.title);
         libraryView.classList.remove('active');
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
@@ -148,11 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    backBtn.addEventListener('click', () => {
-        readerView.classList.remove('active');
-        libraryView.classList.add('active');
-    });
 
     toggleNotesBtn.addEventListener('click', () => {
         notesSheet.classList.toggle('visible');
