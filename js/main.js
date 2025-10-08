@@ -23,16 +23,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const continuousViewBtn = document.getElementById('continuous-view-btn');
     const pagedViewBtn = document.getElementById('paged-view-btn');
     const mindmapBtn = document.getElementById('mindmap-btn');
-    const mindmapPanel = document.getElementById('mindmap-panel');
     const closeMindmapBtn = document.getElementById('close-mindmap');
-
+    
     // بارگذاری کتاب‌ها از localStorage
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
     // اضافه کردن رویداد به دکمه بازگشت
     if (backBtn) {
         backBtn.addEventListener('click', function() {
-            console.log('Back button clicked');
             readerView.classList.remove('active');
             libraryView.classList.add('active');
         });
@@ -55,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (continuousViewBtn) {
         continuousViewBtn.addEventListener('click', function() {
             window.EpubManager.setViewMode('continuous');
-            // به‌روزرسانی حالت فعال
             continuousViewBtn.classList.add('active');
             pagedViewBtn.classList.remove('active');
         });
@@ -64,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (pagedViewBtn) {
         pagedViewBtn.addEventListener('click', function() {
             window.EpubManager.setViewMode('paged');
-            // به‌روزرسانی حالت فعال
             pagedViewBtn.classList.add('active');
             continuousViewBtn.classList.remove('active');
         });
@@ -73,13 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // اضافه کردن رویداد به دکمه مایند مپ
     if (mindmapBtn) {
         mindmapBtn.addEventListener('click', function() {
-            mindmapPanel.classList.add('visible');
+            window.EpubManager.showMindmap();
+            document.getElementById('mindmap-panel').classList.add('visible');
         });
     }
 
     if (closeMindmapBtn) {
         closeMindmapBtn.addEventListener('click', function() {
-            mindmapPanel.classList.remove('visible');
+            document.getElementById('mindmap-panel').classList.remove('visible');
         });
     }
 
@@ -236,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
             icon.classList.add('fa-moon');
         }
         
-        // ذخیره تنظیمات تم در localStorage
         localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     });
 
@@ -249,4 +245,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     renderLibrary();
+});
+
+window.NotesManager = {
+    notes: [],
+    
+    add(note) {
+        if (note && note.trim() !== "") {
+            this.notes.push(note);
+            this.saveToStorage();
+        }
+    },
+    
+    getAll() {
+        return this.notes;
+    },
+    
+    delete(index) {
+        if (index >= 0 && index < this.notes.length) {
+            this.notes.splice(index, 1);
+            this.saveToStorage();
+        }
+    },
+    
+    clear() {
+        this.notes = [];
+        this.saveToStorage();
+    },
+    
+    saveToStorage() {
+        localStorage.setItem('epubNotes', JSON.stringify(this.notes));
+    },
+    
+    loadFromStorage() {
+        const saved = localStorage.getItem('epubNotes');
+        if (saved) {
+            this.notes = JSON.parse(saved);
+        }
+    }
+};
+
+// بارگذاری یادداشت‌ها از localStorage هنگام بارگذاری صفحه
+window.addEventListener('DOMContentLoaded', () => {
+    window.NotesManager.loadFromStorage();
 });
