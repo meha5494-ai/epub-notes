@@ -2,13 +2,17 @@ const bookContainer = document.getElementById('book-container');
 
 let currentBook = null;
 let currentRendition = null;
+let currentPage = 0;
+let totalPages = 0;
 
 const EpubManager = {
     loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
+        currentPage = 0;
+        totalPages = 0;
         
         try {
-            // ایجاد یک div برای محتوای کتاب با ارتفاع کامل
+            // ایجاد یک div برای محتوای کتاب
             const contentDiv = document.createElement('div');
             contentDiv.style.width = '100%';
             contentDiv.style.height = '100%';
@@ -17,29 +21,38 @@ const EpubManager = {
             
             currentBook = ePub(file);
             
-            // رندر کتاب با تنظیمات بهینه برای نمایش محتوا
+            // صبر برای آماده شدن کتاب
+            await currentBook.ready;
+            
+            // دریافت تعداد صفحات
+            const spine = currentBook.spine;
+            totalPages = spine.length;
+            console.log(`Total pages: ${totalPages}`);
+            
+            // رندر کتاب با تنظیمات بهینه
             currentRendition = currentBook.renderTo(contentDiv, {
                 width: '100%',
                 height: '100%',
-                method: 'scrolled-doc',
-                flow: 'scrolled-doc',
-                manager: 'continuous'
+                flow: 'paginated',
+                manager: 'default'
+            });
+            
+            // رویداد برای به‌روزرسانی اطلاعات صفحه
+            currentRendition.on('relocated', (location) => {
+                console.log('Relocated to:', location);
+                currentPage = location.start.cfi;
+                updatePageInfo();
             });
             
             // نمایش کتاب
             await currentRendition.display();
             
-            // تنظیم مجدد اندازه بعد از نمایش
-            setTimeout(() => {
-                if (currentRendition) {
-                    currentRendition.resize();
-                }
-            }, 100);
+            // به‌روزرسانی اطلاعات صفحه
+            updatePageInfo();
             
             return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB:', e);
-            // نمایش پیام خطا در container کتاب
             bookContainer.innerHTML = `
                 <div class="error-container">
                     <div class="error-icon">
@@ -51,6 +64,30 @@ const EpubManager = {
                         <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
                 </div>`;
+        }
+    },
+
+    // تابع برای رفتن به صفحه بعد
+    next: function() {
+        if (currentRendition) {
+            currentRendition.next().then(() => {
+                console.log('Moved to next page');
+                updatePageInfo();
+            }).catch(e => {
+                console.error('Error going to next page:', e);
+            });
+        }
+    },
+
+    // تابع برای رفتن به صفحه قبل
+    prev: function() {
+        if (currentRendition) {
+            currentRendition.prev().then(() => {
+                console.log('Moved to previous page');
+                updatePageInfo();
+            }).catch(e => {
+                console.error('Error going to previous page:', e);
+            });
         }
     },
 
@@ -73,5 +110,20 @@ const EpubManager = {
         };
     }
 };
+
+// تابع برای به‌روزرسانی اطلاعات صفحه
+function updatePageInfo() {
+    const pageInfo = document.getElementById('page-info');
+    if (pageInfo && currentRendition) {
+        currentRendition.location().then(location => {
+            const current = location.start.displayed.page;
+            const total = location.start.displayed.total;
+            pageInfo.textContent = `صفحه ${current} از ${total}`;
+        }).catch(e => {
+            console.error('Error getting page info:', e);
+            pageInfo.textContent = 'صفحه 1 از 1';
+        });
+    }
+}
 
 window.EpubManager = EpubManager;
