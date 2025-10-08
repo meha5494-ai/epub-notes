@@ -1,8 +1,9 @@
 // js/main.js
 
-// دسترسی به کلاس‌ها و توابع از فضای گلوبال
+// دسترسی به کلاس‌ها و توابع از فضای گلوبال (بدون استفاده از const یا let در تعریف مجدد)
+// ما به سادگی از متغیرهایی که قبلاً توسط فایل‌های notes-manager.js و epub-manager.js در window تعریف شده‌اند، استفاده می‌کنیم.
 const NotesManager = window.NotesManager;
-const EpubManager = window.EpubManager;
+const EpubManager = window.EpubManager; 
 
 // DOM Elements
 const libraryView = document.getElementById('library-view');
@@ -18,7 +19,6 @@ const toggleNotesButton = document.getElementById('toggle-notes');
 const notesSheet = document.getElementById('notes-sheet');
 const closeNotesSheetButton = document.getElementById('close-notes-sheet');
 const notesList = document.getElementById('notes-list');
-// const noNotesMessage = document.getElementById('no-notes-message'); // استفاده شده در renderNotesList
 const saveNoteButton = document.getElementById('save-note');
 const cancelNoteButton = document.getElementById('cancel-note');
 const noteTextInput = document.getElementById('note-text-input');
@@ -64,7 +64,7 @@ const renderBooks = () => {
         const card = document.createElement('div');
         card.className = 'book-card';
         card.setAttribute('data-id', book.id);
-        // استفاده از یک تابع محلی با دسترسی به book.id برای تضمین عملکرد کلیک
+        
         card.addEventListener('click', () => openBook(book.id)); 
 
         let coverContent;
@@ -151,7 +151,6 @@ backButton.addEventListener('click', () => {
     readerView.classList.remove('active');
     libraryView.classList.add('active');
     currentBookMetadata = null;
-    // هنگام برگشت به کتابخانه، لیست را مجددا رندر می‌کنیم
     renderBooks(); 
 });
 
@@ -219,21 +218,19 @@ closeNotesSheetButton.addEventListener('click', EpubManager.hideNotesSheet);
 saveNoteButton.addEventListener('click', async () => {
     const noteText = noteTextInput.value.trim();
     
-    // دریافت داده‌های یادداشت از EpubManager
     const { cfiRange, contextText } = EpubManager.getCurrentNoteData();
     const bookId = EpubManager.getCurrentBookId();
     
     if (noteText && bookId && cfiRange && contextText) {
         await NotesManager.saveNote(bookId, cfiRange, noteText, contextText);
         
-        // اگر پنل یادداشت‌ها باز است، آن را به‌روزرسانی کنید.
         if (notesSheet.classList.contains('visible')) {
             await renderNotesList(bookId);
         }
         
-        // هایلایت مجدد در کتاب
         const rendition = EpubManager.getCurrentRendition();
         if (rendition) {
+            // رندر مجدد هایلایت برای نمایش یادداشت جدید
             rendition.annotations.highlight(cfiRange, { 'fill': 'yellow', 'opacity': '0.3' }, () => EpubManager.showNotesSheet(), 'epub-note-highlight');
         }
         
