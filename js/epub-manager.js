@@ -3,26 +3,24 @@
 // دسترسی به NoteManager از فضای گلوبال
 const NotesManager = window.NotesManager;
 
-// DOM Elements
-const readerArea = document.getElementById('reader-area');
+// DOM Elements (دسترسی مستقیم، زیرا در زمان بارگذاری موجود هستند)
 const bookContainer = document.getElementById('book-container');
 const loadingOverlay = document.getElementById('loading-overlay');
 const popover = document.getElementById('add-note-popover');
 const notesSheet = document.getElementById('notes-sheet');
 const noteTextInput = document.getElementById('note-text-input');
 
-// Global variables for EPUB state
+// Global variables for EPUB state (Local to this script)
 let currentBook = null;
 let currentRendition = null;
 let currentBookId = null;
-let currentCfiRange = null;     // نگهداری وضعیت Popover در همین ماژول
-let currentContextText = null;  // نگهداری وضعیت Popover در همین ماژول
-let isSelectingText = false;
+let currentCfiRange = null;     // متغیرهای وضعیت پاپ‌اوور
+let currentContextText = null;  // متغیرهای وضعیت پاپ‌اوور
 
 
 /**
  * مدیریت خواندن EPUB (epub.js)
- * این شیء به فضای گلوبال (window) منتقل می‌شود.
+ * تعریف شیء EpubManager در فضای گلوبال (window)
  */
 window.EpubManager = {
     loadEpub: async (bookId, epubFile, bookTitle) => {
@@ -33,6 +31,7 @@ window.EpubManager = {
         bookContainer.innerHTML = ''; 
 
         try {
+            // ePub یک تابع گلوبال است که توسط CDN فراهم شده
             currentBook = new ePub(epubFile);
 
             currentRendition = currentBook.renderTo('book-container', {
@@ -94,18 +93,17 @@ window.EpubManager = {
         if (!currentRendition) return;
 
         currentRendition.on('selected', (cfiRange, contents) => {
-            isSelectingText = true;
             const text = currentRendition.getRange(cfiRange).toString().trim();
             
             if (text.length > 0) {
-                // نمایش Popover از طریق تابع داخلی
+                // نمایش Popover
                 window.EpubManager.showAddNotePopover(cfiRange, text, contents); 
             } else {
                 window.EpubManager.clearSelection();
             }
-            isSelectingText = false;
         });
         
+        // Highlight existing notes
         currentRendition.hooks.render.register(async (contents) => {
             const notes = await NotesManager.getNotes(currentBookId);
             notes.forEach(note => {
@@ -118,14 +116,20 @@ window.EpubManager = {
             });
         });
 
+        // Add CSS for highlight to iframe
         currentRendition.on('added', (section, view) => {
             const doc = view.document;
             const style = doc.createElement('style');
+            // از CSS Variables اصلی برای تم روشن/تیره استفاده می‌کند
             style.textContent = `
                 .epub-note-highlight {
-                    background-color: var(--highlight-color, rgba(0, 122, 255, 0.3)) !important;
+                    background-color: var(--highlight-color, rgba(0, 122, 255, 0.3)) !important; 
                     cursor: pointer;
                     direction: rtl;
+                }
+                body {
+                    background-color: var(--bg-color); 
+                    color: var(--text-color);
                 }
             `;
             doc.head.appendChild(style);
@@ -171,6 +175,7 @@ window.EpubManager = {
             popover.style.transform = 'translate(-50%, -50%)';
             popover.style.top = `${posY + 20}px`;
             
+            // If the popover goes off the bottom of the screen, move it above the selection
             if (posY + popover.offsetHeight > window.innerHeight) {
                 popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
             }
