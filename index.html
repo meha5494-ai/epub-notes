@@ -55,9 +55,14 @@
         <div class="book-title-container">
             <h2 id="reader-title">عنوان کتاب</h2>
         </div>
-        <button class="icon-btn" id="toggle-notes">
-            <i class="fas fa-sticky-note"></i>
-        </button>
+        <div class="header-actions-mobile">
+            <button class="icon-btn mobile-btn" id="toggle-notes">
+                <i class="fas fa-sticky-note"></i>
+            </button>
+            <button class="icon-btn mobile-btn" id="mindmap-btn">
+                <i class="fas fa-project-diagram"></i>
+            </button>
+        </div>
     </div>
     
     <!-- نوار پیشرفت مطالعه -->
@@ -65,20 +70,19 @@
         <div class="progress-bar">
             <div class="progress-fill" id="progress-fill"></div>
         </div>
-        <div class="progress-text" id="progress-text">0%</div>
-        <div class="page-info" id="page-info">صفحه 0 از 0</div>
+        <div class="progress-info">
+            <span class="progress-text" id="progress-text">0%</span>
+            <span class="page-info" id="page-info">صفحه 0 از 0</span>
+        </div>
     </div>
     
-    <!-- دکمه‌های نمایش -->
-    <div class="view-controls">
+    <!-- دکمه‌های نمایش (فقط در نسخه دسکتاپ) -->
+    <div class="view-controls desktop-only">
         <button class="view-btn active" id="continuous-view-btn" title="نمایش پیوسته">
             <i class="fas fa-align-justify"></i>
         </button>
         <button class="view-btn" id="paged-view-btn" title="نمایش صفحه به صفحه">
             <i class="fas fa-file"></i>
-        </button>
-        <button class="view-btn" id="mindmap-btn" title="نمایش مایند مپ">
-            <i class="fas fa-project-diagram"></i>
         </button>
     </div>
     
@@ -86,8 +90,8 @@
         <div id="book-container"></div>
     </div>
     
-    <!-- دکمه‌های ناوبری صفحات -->
-    <div class="page-navigation">
+    <!-- دکمه‌های ناوبری صفحات (فقط در نسخه دسکتاپ) -->
+    <div class="page-navigation desktop-only">
         <button class="page-nav-btn" id="prev-page-btn">
             <i class="fas fa-chevron-right"></i>
         </button>
