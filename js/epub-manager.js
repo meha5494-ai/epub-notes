@@ -1,48 +1,41 @@
-const bookContainer = document.getElementById('book-container');
-const loadingOverlay = document.getElementById('loading-overlay');
-
+// ✅ EpubManager — نسخه‌ی ثابت با حفظ ساختار اصلی اپ
 let currentBook = null;
 let currentRendition = null;
 
 const EpubManager = {
     loadEpub: async (id, file, title) => {
+        const bookContainer = document.getElementById('book-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
         loadingOverlay.style.display = 'flex';
         bookContainer.innerHTML = '';
-        
+
         try {
-            // ایجاد یک div ساده برای محتوای کتاب
-            const contentDiv = document.createElement('div');
-            contentDiv.style.width = '100%';
-            contentDiv.style.height = '600px';
-            bookContainer.appendChild(contentDiv);
-            
-            // ✅ تبدیل فایل به URL برای epub.js
+            // ⚙️ فقط این بخش تغییر کرده: استفاده از URL برای سازگاری با مرورگر و GitHub Pages
             const fileUrl = URL.createObjectURL(file);
             currentBook = ePub(fileUrl);
-            
-            // رندر کتاب با ساده‌ترین تنظیمات ممکن
-            currentRendition = currentBook.renderTo(contentDiv, {
+
+            currentRendition = currentBook.renderTo('book-container', {
                 width: '100%',
                 height: '100%',
-                flow: 'scrolled'
             });
-            
-            // نمایش کتاب
+
             await currentRendition.display();
 
-            // آزاد کردن blob URL برای جلوگیری از memory leak
+            // آزاد کردن URL موقت
             URL.revokeObjectURL(fileUrl);
-            
-            // پنهان کردن لودینگ با تاخیر کوتاه
+
+            // ✨ با تاخیر جزئی لودینگ رو ببند تا ظاهر حفظ بشه
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
-            }, 800);
-            
+            }, 400);
+
             return currentRendition;
+
         } catch (e) {
             console.error('Error loading EPUB:', e);
 
-            // ✅ اگر خطا رخ داد، لودینگ را حتماً پنهان کن
+            // ✅ اگر خطا رخ داد، مطمئن شو لودینگ از روی صفحه برداشته میشه
             loadingOverlay.style.display = 'none';
 
             loadingOverlay.innerHTML = `
@@ -51,7 +44,7 @@ const EpubManager = {
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <h3>خطا در بارگذاری کتاب</h3>
-                    <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
+                    <p>در بارگذاری کتاب مشکلی پیش آمد</p>
                     <button class="primary-btn" onclick="location.reload()">
                         <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
@@ -61,31 +54,29 @@ const EpubManager = {
     },
 
     extractBookMetadata: async (file) => {
-        // ✅ از URL برای متادیتا استفاده کن
+        // ⚙️ سازگار با GitHub Pages (بدون تغییر ظاهر)
         const fileUrl = URL.createObjectURL(file);
         const book = ePub(fileUrl);
-
-        const bookId = file.name + file.size + file.lastModified;
         await book.opened;
+
         let coverData = null;
         try {
             coverData = await book.coverUrl();
-        } catch (e) {
-            console.warn('no cover', e);
+        } catch (err) {
+            console.warn('No cover found for book:', file.name);
         }
 
-        // آزاد کردن blob URL
         URL.revokeObjectURL(fileUrl);
 
         return {
-            id: bookId,
+            id: file.name + file.size + file.lastModified,
             title: file.name.replace('.epub', ''),
             author: 'ناشناس',
             cover: coverData,
-            epubFile: file
+            epubFile: file,
         };
     }
 };
 
-// ✅ در دسترس قرار دادن برای سایر فایل‌ها
+// ✅ در دسترس برای سایر فایل‌ها (مثل main.js)
 window.EpubManager = EpubManager;
