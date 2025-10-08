@@ -1,4 +1,5 @@
-// ساده و گلوبال بدون import/export
+document.addEventListener('DOMContentLoaded', function(){
+
 const bookGrid = document.getElementById('book-grid');
 const fileInput = document.getElementById('epub-file-input');
 const uploadBtn = document.getElementById('upload-button');
@@ -113,4 +114,10 @@ backBtn.addEventListener('click', ()=>{
 toggleNotesBtn.addEventListener('click', ()=> notesSheet.classList.toggle('visible'));
 closeNotesBtn.addEventListener('click', ()=> notesSheet.classList.remove('visible'));
 cancelNoteBtn.addEventListener('click', ()=> addNotePopover.classList.remove('visible'));
-themeToggle.addEventListener('click', ()=> document.body.classList.toggle('dark'));
+
+// تم روشن/تیره
+themeToggle.addEventListener('click', ()=>{
+    document.body.classList.toggle('dark');
+});
+
+});
