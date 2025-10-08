@@ -1,80 +1,40 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مدیریت کتاب و یادداشت‌ها</title>
-
-  <!-- فایل‌های PWA -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png" type="image/png">
-
-  <!-- استایل اصلی -->
-  <link rel="stylesheet" href="styles.css">
+  <title>کتاب‌خوان من</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/idb-keyval.iife.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
 </head>
 <body>
-  <noscript>
-    <div style="text-align: center; padding: 20px; background: #ffdddd; color: #d8000c;">
-      برای استفاده از این اپلیکیشن، جاوااسکریپت باید فعال باشد.
-    </div>
-  </noscript>
-
   <div class="app-container">
-    <!-- هدر -->
     <header>
-      <h1>کتابخانه شخصی</h1>
-      <button id="install-btn" type="button">نصب اپلیکیشن</button>
+      <h1>📚 کتاب‌خوان من</h1>
+      <button id="upload-btn">افزودن کتاب</button>
+      <input type="file" id="file-input" accept=".epub" hidden />
     </header>
 
-    <!-- بخش آپلود کتاب -->
-    <section class="upload-section">
-      <input type="file" id="book-upload" accept=".epub" hidden>
-      <button id="upload-btn" type="button">آپلود کتاب جدید</button>
-    </section>
-
-    <!-- لیست کتاب‌ها -->
-    <section class="book-list">
+    <section id="book-list-section">
       <h2>کتاب‌های من</h2>
-      <div id="books-container"></div>
+      <div id="book-list"></div>
     </section>
 
-    <!-- بخش خواندن کتاب -->
     <section id="reader-section" class="hidden">
-      <div class="reader-controls">
-        <button id="back-btn" type="button">بازگشت</button>
-        <button id="add-note-btn" type="button">افزودن یادداشت</button>
-      </div>
       <div id="viewer"></div>
+      <button id="add-note-btn" class="fab">📝</button>
     </section>
 
-    <!-- پنل یادداشت‌ها -->
-    <section id="notes-panel" class="hidden">
-      <h3>یادداشت‌های کتاب</h3>
+    <aside id="notes-panel" class="hidden">
+      <h3>یادداشت‌ها</h3>
       <div id="notes-container"></div>
-    </section>
+      <button id="close-notes-btn">بستن</button>
+    </aside>
   </div>
 
-  <!-- ====================== 📚 اسکریپت‌ها ====================== -->
-
-  <!-- 💡 این خط ضروریه تا خطای JSZip lib not loaded برطرف بشه -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-  <!-- کتابخانه‌های موردنیاز -->
-  <script src="libs/epub.min.js"></script>
-  <script src="libs/idb-keyval.min.js"></script>
-
-  <!-- فایل‌های اصلی پروژه -->
-  <script src="js/epub-manager.js"></script>
-  <script src="js/notes-manager.js"></script>
-  <script src="js/main.js"></script>
-
-  <!-- 📦 ثبت سرویس‌ورکر -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(() => console.log('✅ Service Worker registered successfully'))
-        .catch(err => console.warn('Service Worker error:', err));
-    }
-  </script>
+  <script src="epub-manager.js"></script>
+  <script src="notes-manager.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
