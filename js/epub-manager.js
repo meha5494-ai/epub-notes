@@ -10,62 +10,33 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
-            // ایجاد یک div با اندازه مشخص برای محتوای کتاب
+            // ایجاد یک div ساده برای محتوای کتاب
             const contentDiv = document.createElement('div');
-            contentDiv.id = 'epub-content';
-            contentDiv.style.cssText = `
-                width: 100%;
-                height: 100%;
-                min-height: 70vh;
-                position: relative;
-                background: var(--surface);
-                border-radius: 12px;
-                overflow: hidden;
-            `;
+            contentDiv.style.width = '100%';
+            contentDiv.style.height = '100%';
+            contentDiv.style.minHeight = '500px';
             bookContainer.appendChild(contentDiv);
             
             currentBook = ePub(file);
             
-            // صبر برای آماده شدن کتاب
+            // اطمینان از اینکه کتاب به درستی باز شده
             await currentBook.ready;
             
-            // تنظیمات رندر با روش متفاوت
+            // رندر کتاب با تنظیمات ساده
             currentRendition = currentBook.renderTo(contentDiv, {
                 width: '100%',
                 height: '100%',
-                spread: 'none',
                 flow: 'scrolled-doc',
-                manager: 'continuous'
+                manager: 'default'
             });
             
-            // رویداد برای اطمینان از بارگذاری کامل
-            let renderCount = 0;
-            currentRendition.on('rendered', (section) => {
-                renderCount++;
-                console.log(`Section ${renderCount} rendered`);
-                
-                // بعد از رندر شدن اولین بخش، لودینگ را پنهان کن
-                if (renderCount === 1) {
-                    setTimeout(() => {
-                        loadingOverlay.style.display = 'none';
-                    }, 500);
-                }
-            });
-            
-            // تلاش برای نمایش کتاب
+            // نمایش کتاب
             await currentRendition.display();
             
-            // تنظیم مجدد اندازه بعد از نمایش
+            // پنهان کردن لودینگ بعد از 1 ثانیه
             setTimeout(() => {
-                if (currentRendition) {
-                    currentRendition.resize();
-                }
-                
-                // اگر لودینگ هنوز نمایش داده می‌شود، آن را پنهان کن
-                if (loadingOverlay.style.display === 'flex') {
-                    loadingOverlay.style.display = 'none';
-                }
-            }, 2000);
+                loadingOverlay.style.display = 'none';
+            }, 1000);
             
             return currentRendition;
         } catch (e) {
