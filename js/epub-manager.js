@@ -2,6 +2,9 @@ const bookContainer = document.getElementById('book-container');
 
 let currentBook = null;
 let currentRendition = null;
+let currentPage = 0;
+let totalPages = 0;
+let isPaginatedView = false;
 
 const EpubManager = {
     loadEpub: async (id, file, title) => {
@@ -24,40 +27,35 @@ const EpubManager = {
             
             currentBook = ePub(file);
             
-            // رندر کتاب با تنظیمات بسیار ساده
-            currentRendition = currentBook.renderTo("epub-content", {
+            // صبر برای آماده شدن کتاب
+            await currentBook.ready;
+            
+            // دریافت تعداد صفحات
+            const spine = currentBook.spine;
+            totalPages = spine.length;
+            console.log(`Total pages: ${totalPages}`);
+            
+            // رندر کتاب با تنظیمات پیش‌فرض
+            currentRendition = currentBook.renderTo(contentDiv, {
                 width: "100%",
                 height: "100%",
-                flow: "scrolled-doc",
-                manager: "continuous"
+                flow: isPaginatedView ? "paginated" : "scrolled-doc",
+                manager: "default"
+            });
+            
+            // رویداد برای به‌روزرسانی اطلاعات صفحه
+            currentRendition.on('relocated', (location) => {
+                console.log('Relocated to:', location);
+                updatePageInfo();
+                updateProgress();
             });
             
             // نمایش کتاب
             await currentRendition.display();
             
-            // بررسی و تنظیم iframe بعد از رندر
-            setTimeout(() => {
-                const iframe = document.querySelector('#epub-content iframe');
-                if (iframe) {
-                    iframe.style.cssText = `
-                        width: 100%;
-                        height: 100%;
-                        border: none;
-                        overflow: auto;
-                        background: white;
-                    `;
-                    
-                    // اطمینان از اینکه محتوای iframe قابل مشاهده است
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    if (iframeDoc && iframeDoc.body) {
-                        iframeDoc.body.style.direction = 'rtl';
-                        iframeDoc.body.style.fontFamily = 'Vazirmatn, sans-serif';
-                        iframeDoc.body.style.lineHeight = '1.8';
-                        iframeDoc.body.style.fontSize = '16px';
-                        iframeDoc.body.style.color = '#1e293b';
-                    }
-                }
-            }, 500);
+            // به‌روزرسانی اطلاعات صفحه و پیشرفت
+            updatePageInfo();
+            updateProgress();
             
             return currentRendition;
         } catch (e) {
@@ -108,6 +106,116 @@ const EpubManager = {
         }
     },
 
+    // تابع برای رفتن به صفحه بعد
+    next: function() {
+        if (currentRendition) {
+            currentRendition.next().then(() => {
+                console.log('Moved to next page');
+                updatePageInfo();
+                updateProgress();
+            }).catch(e => {
+                console.error('Error going to next page:', e);
+            });
+        }
+    },
+
+    // تابع برای رفتن به صفحه قبل
+    prev: function() {
+        if (currentRendition) {
+            currentRendition.prev().then(() => {
+                console.log('Moved to previous page');
+                updatePageInfo();
+                updateProgress();
+            }).catch(e => {
+                console.error('Error going to previous page:', e);
+            });
+        }
+    },
+
+    // تابع برای تغییر حالت نمایش
+    toggleViewMode: function() {
+        if (!currentRendition) return;
+        
+        isPaginatedView = !isPaginatedView;
+        
+        // دریافت تنظیمات فعلی
+        const currentLocation = currentRendition.currentLocation();
+        
+        // رندر مجدد با حالت جدید
+        currentRendition.destroy();
+        
+        const contentDiv = document.getElementById('epub-content');
+        currentRendition = currentBook.renderTo(contentDiv, {
+            width: "100%",
+            height: "100%",
+            flow: isPaginatedView ? "paginated" : "scrolled-doc",
+            manager: "default"
+        });
+        
+        // نمایش کتاب در محل قبلی
+        currentRendition.display(currentLocation).then(() => {
+            updatePageInfo();
+            updateProgress();
+            
+            // به‌روزرسانی دکمه تغییر حالت
+            const viewToggleBtn = document.getElementById('view-toggle-btn');
+            if (viewToggleBtn) {
+                if (isPaginatedView) {
+                    viewToggleBtn.innerHTML = '<i class="fas fa-file-alt"></i>';
+                    viewToggleBtn.title = 'نمای پیوسته';
+                } else {
+                    viewToggleBtn.innerHTML = '<i class="fas fa-columns"></i>';
+                    viewToggleBtn.title = 'نمای صفحه‌ای';
+                }
+            }
+        });
+    },
+
+    // تابع برای دریافت فهرست مطالب
+    getOutline: async function() {
+        if (!currentBook) return [];
+        
+        try {
+            const nav = await currentBook.loaded.navigation;
+            const outline = [];
+            
+            // دریافت فصل‌ها
+            const toc = await nav.toc();
+            
+            function processTocItem(item, level = 0) {
+                if (item.label) {
+                    outline.push({
+                        label: item.label,
+                        level: level,
+                        href: item.href
+                    });
+                }
+                
+                if (item.subitems) {
+                    item.subitems.forEach(subitem => processTocItem(subitem, level + 1));
+                }
+            }
+            
+            if (toc) {
+                processTocItem(toc);
+            }
+            
+            return outline;
+        } catch (e) {
+            console.error('Error getting outline:', e);
+            return [];
+        }
+    },
+
+    // تابع برای رفتن به یک بخش خاص
+    goToSection: function(href) {
+        if (currentRendition && href) {
+            currentRendition.rended.then(() => {
+                currentRendition.display(href);
+            });
+        }
+    },
+
     extractBookMetadata: async (file) => {
         const book = ePub(file);
         const bookId = file.name + file.size + file.lastModified;
@@ -127,5 +235,40 @@ const EpubManager = {
         };
     }
 };
+
+// توابع کمکی برای به‌روزرسانی UI
+function updatePageInfo() {
+    const pageInfo = document.getElementById('page-info');
+    const progressText = document.getElementById('progress-text');
+    
+    if (pageInfo && currentRendition) {
+        currentRendition.location().then(location => {
+            const current = location.start.displayed.page;
+            const total = location.start.displayed.total;
+            pageInfo.textContent = `صفحه ${current} از ${total}`;
+            progressText.textContent = `صفحه ${current} از ${total}`;
+        }).catch(e => {
+            console.error('Error getting page info:', e);
+            pageInfo.textContent = 'صفحه 1 از 1';
+            progressText.textContent = 'صفحه 1 از 1';
+        });
+    }
+}
+
+function updateProgress() {
+    const progressFill = document.getElementById('progress-fill');
+    
+    if (progressFill && currentRendition) {
+        currentRendition.location().then(location => {
+            const current = location.start.displayed.page;
+            const total = location.start.displayed.total;
+            const percentage = total > 0 ? (current / total) * 100 : 0;
+            progressFill.style.width = `${percentage}%`;
+        }).catch(e => {
+            console.error('Error updating progress:', e);
+            progressFill.style.width = '0%';
+        });
+    }
+}
 
 window.EpubManager = EpubManager;
