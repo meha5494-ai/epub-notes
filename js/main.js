@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // اضافه کردن رویداد به دکمه‌های ناوبری
+    // اضافه کردن رویداد به دکمه‌های ناویری (فقط در دسکتاپ)
     if (prevPageBtn) {
         prevPageBtn.addEventListener('click', function() {
             window.EpubManager.prev();
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        books.forEach(book => {
+        books.forEach((book, index) => {
             const div = document.createElement('div');
             div.className = 'book-card';
             
@@ -132,6 +132,20 @@ document.addEventListener('DOMContentLoaded', function() {
             titleDiv.textContent = book.title;
             div.appendChild(titleDiv);
             
+            // دکمه حذف کتاب
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-book-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm('آیا از حذف این کتاب مطمئن هستید؟')) {
+                    books.splice(index, 1);
+                    localStorage.setItem('epubBooks', JSON.stringify(books));
+                    renderLibrary();
+                }
+            };
+            div.appendChild(deleteBtn);
+            
             div.onclick = () => openBook(book);
             bookGrid.appendChild(div);
         });
@@ -150,7 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // بارگذاری کتاب با فایل صحیح
         try {
             console.log('Loading book...');
-            // اصلاح: استفاده از book.epubFile به جای book.file
             await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
             console.log('Book loaded successfully');
         } catch (error) {
