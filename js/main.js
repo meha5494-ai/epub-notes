@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // دکمه‌های ناوبری صفحات
     const prevPageBtn = document.getElementById('prev-page-btn');
     const nextPageBtn = document.getElementById('next-page-btn');
+    
+    // دکمه‌های جدید
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    const outlineBtn = document.getElementById('outline-btn');
+    const closeOutlineBtn = document.getElementById('close-outline');
+    const outlinePanel = document.getElementById('outline-panel');
+    const outlineList = document.getElementById('outline-list');
 
     // بارگذاری کتاب‌ها از localStorage
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
@@ -46,6 +53,54 @@ document.addEventListener('DOMContentLoaded', function() {
         nextPageBtn.addEventListener('click', function() {
             console.log('Next page button clicked');
             window.EpubManager.next();
+        });
+    }
+
+    // اضافه کردن رویداد به دکمه‌های جدید
+    if (viewToggleBtn) {
+        viewToggleBtn.addEventListener('click', function() {
+            console.log('View toggle button clicked');
+            window.EpubManager.toggleViewMode();
+        });
+    }
+
+    if (outlineBtn) {
+        outlineBtn.addEventListener('click', async function() {
+            console.log('Outline button clicked');
+            outlinePanel.classList.add('visible');
+            
+            // بارگذاری فهرست مطالب
+            const outline = await window.EpubManager.getOutline();
+            
+            outlineList.innerHTML = '';
+            if (outline.length === 0) {
+                outlineList.innerHTML = `
+                    <div class="empty-outline">
+                        <i class="fas fa-list"></i>
+                        <p>فهرست مطالبی برای این کتاب یافت نشد</p>
+                    </div>
+                `;
+            } else {
+                outline.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = `outline-item level-${item.level}`;
+                    div.innerHTML = `
+                        <i class="fas fa-chevron-left"></i>
+                        <span>${item.label}</span>
+                    `;
+                    div.addEventListener('click', () => {
+                        window.EpubManager.goToSection(item.href);
+                        outlinePanel.classList.remove('visible');
+                    });
+                    outlineList.appendChild(div);
+                });
+            }
+        });
+    }
+
+    if (closeOutlineBtn) {
+        closeOutlineBtn.addEventListener('click', function() {
+            outlinePanel.classList.remove('visible');
         });
     }
 
@@ -213,3 +268,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     renderLibrary();
 });
+``
