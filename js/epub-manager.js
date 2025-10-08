@@ -1,8 +1,5 @@
-import { notesManagerInstance } from './notes-manager.js';
-import ePub from 'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.esm.min.js';
-import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.esm.min.js';
-
-window.JSZip = JSZip; // epub.js needs this
+// Access global NotesManager
+const NotesManager = window.NotesManager;
 
 const bookContainer = document.getElementById('book-container');
 const loadingOverlay = document.getElementById('loading-overlay');
@@ -16,7 +13,7 @@ let currentBookId = null;
 let currentCfiRange = null;
 let currentContextText = null;
 
-export const EpubManager = {
+window.EpubManager = {
     loadEpub: async (bookId, epubFile, bookTitle) => {
         currentBookId = bookId;
         document.getElementById('reader-title').textContent = bookTitle;
@@ -38,16 +35,14 @@ export const EpubManager = {
                 if (doc) {
                     doc.documentElement.setAttribute('dir', 'rtl');
                     doc.body.style.fontFamily = 'Vazirmatn, sans-serif';
-                    doc.body.style.direction = 'rtl';
                     doc.body.style.textAlign = 'justify';
                 }
             });
 
             loadingOverlay.classList.add('hidden');
             EpubManager.setupSelectionHandler();
-            return currentRendition;
-        } catch (error) {
-            console.error('Error loading EPUB:', error);
+        } catch (err) {
+            console.error(err);
             loadingOverlay.textContent = 'خطا در بارگذاری کتاب.';
         }
     },
@@ -58,15 +53,14 @@ export const EpubManager = {
         await book.opened;
         const metadata = book.metadata;
 
-        let coverDataUrl = null;
-        try { coverDataUrl = await book.coverUrl(); } 
-        catch (e) { console.warn('Could not extract cover image:', e); }
+        let cover = null;
+        try { cover = await book.coverUrl(); } catch(e){}
 
         return {
             id: bookId,
-            title: metadata.title || file.name.replace('.epub', ''),
+            title: metadata.title || file.name.replace('.epub',''),
             author: metadata.creator || 'ناشناس',
-            cover: coverDataUrl,
+            cover: cover,
             epubFile: file
         };
     },
@@ -76,39 +70,8 @@ export const EpubManager = {
 
         currentRendition.on('selected', (cfiRange, contents) => {
             const text = currentRendition.getRange(cfiRange).toString().trim();
-            if (text.length > 0) EpubManager.showAddNotePopover(cfiRange, text, contents);
+            if(text) EpubManager.showAddNotePopover(cfiRange, text, contents);
             else EpubManager.clearSelection();
-        });
-
-        currentRendition.hooks.render.register(async (contents) => {
-            const notes = await notesManagerInstance.getNotes(currentBookId);
-            notes.forEach(note => {
-                if (note.cfiRange) {
-                    currentRendition.annotations.highlight(
-                        note.cfiRange,
-                        { fill: 'yellow', opacity: '0.3' },
-                        e => { if (e.target.tagName !== 'A') EpubManager.showNotesSheet(); },
-                        'epub-note-highlight'
-                    );
-                }
-            });
-        });
-
-        currentRendition.on('added', (section, view) => {
-            const doc = view.document;
-            const style = doc.createElement('style');
-            style.textContent = `
-                .epub-note-highlight {
-                    background-color: var(--highlight-color, rgba(0, 122, 255, 0.3)) !important; 
-                    cursor: pointer;
-                    direction: rtl;
-                }
-                body {
-                    background-color: var(--bg-color); 
-                    color: var(--text-color);
-                }
-            `;
-            doc.head.appendChild(style);
         });
     },
 
@@ -117,32 +80,10 @@ export const EpubManager = {
         EpubManager.hideAddNotePopover();
     },
 
-    showNotesSheet: () => notesSheet.classList.add('visible'),
-    hideNotesSheet: () => notesSheet.classList.remove('visible'),
-
-    getCurrentBookId: () => currentBookId,
-    getCurrentRendition: () => currentRendition,
-
     showAddNotePopover: (cfiRange, contextText, contents) => {
         currentCfiRange = cfiRange;
         currentContextText = contextText;
         noteTextInput.value = '';
-
-        const selection = contents.window.getSelection();
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
-            const iframeRect = contents.iframe.getBoundingClientRect();
-            const posY = iframeRect.top + rect.bottom;
-
-            popover.style.left = '50%';
-            popover.style.transform = 'translate(-50%, -50%)';
-            popover.style.top = `${posY + 20}px`;
-
-            if (posY + popover.offsetHeight > window.innerHeight) {
-                popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
-            }
-        }
         popover.classList.add('visible');
         noteTextInput.focus();
     },
@@ -151,10 +92,5 @@ export const EpubManager = {
         popover.classList.remove('visible');
         currentCfiRange = null;
         currentContextText = null;
-    },
-
-    getCurrentNoteData: () => ({
-        cfiRange: currentCfiRange,
-        contextText: currentContextText
-    })
+    }
 };
