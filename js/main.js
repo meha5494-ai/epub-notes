@@ -19,12 +19,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevPageBtn = document.getElementById('prev-page-btn');
     const nextPageBtn = document.getElementById('next-page-btn');
     
-    // دکمه‌های جدید
-    const viewToggleBtn = document.getElementById('view-toggle-btn');
-    const outlineBtn = document.getElementById('outline-btn');
-    const closeOutlineBtn = document.getElementById('close-outline');
-    const outlinePanel = document.getElementById('outline-panel');
-    const outlineList = document.getElementById('outline-list');
+    // دکمه‌های نمایش
+    const continuousViewBtn = document.getElementById('continuous-view-btn');
+    const pagedViewBtn = document.getElementById('paged-view-btn');
+    const mindmapBtn = document.getElementById('mindmap-btn');
+    const mindmapPanel = document.getElementById('mindmap-panel');
+    const closeMindmapBtn = document.getElementById('close-mindmap');
 
     // بارگذاری کتاب‌ها از localStorage
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
@@ -36,71 +36,50 @@ document.addEventListener('DOMContentLoaded', function() {
             readerView.classList.remove('active');
             libraryView.classList.add('active');
         });
-        console.log('Back button event listener added successfully');
-    } else {
-        console.error('Back button element not found');
     }
 
     // اضافه کردن رویداد به دکمه‌های ناوبری
     if (prevPageBtn) {
         prevPageBtn.addEventListener('click', function() {
-            console.log('Previous page button clicked');
             window.EpubManager.prev();
         });
     }
 
     if (nextPageBtn) {
         nextPageBtn.addEventListener('click', function() {
-            console.log('Next page button clicked');
             window.EpubManager.next();
         });
     }
 
-    // اضافه کردن رویداد به دکمه‌های جدید
-    if (viewToggleBtn) {
-        viewToggleBtn.addEventListener('click', function() {
-            console.log('View toggle button clicked');
-            window.EpubManager.toggleViewMode();
+    // اضافه کردن رویداد به دکمه‌های نمایش
+    if (continuousViewBtn) {
+        continuousViewBtn.addEventListener('click', function() {
+            window.EpubManager.setViewMode('continuous');
+            // به‌روزرسانی حالت فعال
+            continuousViewBtn.classList.add('active');
+            pagedViewBtn.classList.remove('active');
         });
     }
 
-    if (outlineBtn) {
-        outlineBtn.addEventListener('click', async function() {
-            console.log('Outline button clicked');
-            outlinePanel.classList.add('visible');
-            
-            // بارگذاری فهرست مطالب
-            const outline = await window.EpubManager.getOutline();
-            
-            outlineList.innerHTML = '';
-            if (outline.length === 0) {
-                outlineList.innerHTML = `
-                    <div class="empty-outline">
-                        <i class="fas fa-list"></i>
-                        <p>فهرست مطالبی برای این کتاب یافت نشد</p>
-                    </div>
-                `;
-            } else {
-                outline.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = `outline-item level-${item.level}`;
-                    div.innerHTML = `
-                        <i class="fas fa-chevron-left"></i>
-                        <span>${item.label}</span>
-                    `;
-                    div.addEventListener('click', () => {
-                        window.EpubManager.goToSection(item.href);
-                        outlinePanel.classList.remove('visible');
-                    });
-                    outlineList.appendChild(div);
-                });
-            }
+    if (pagedViewBtn) {
+        pagedViewBtn.addEventListener('click', function() {
+            window.EpubManager.setViewMode('paged');
+            // به‌روزرسانی حالت فعال
+            pagedViewBtn.classList.add('active');
+            continuousViewBtn.classList.remove('active');
         });
     }
 
-    if (closeOutlineBtn) {
-        closeOutlineBtn.addEventListener('click', function() {
-            outlinePanel.classList.remove('visible');
+    // اضافه کردن رویداد به دکمه مایند مپ
+    if (mindmapBtn) {
+        mindmapBtn.addEventListener('click', function() {
+            mindmapPanel.classList.add('visible');
+        });
+    }
+
+    if (closeMindmapBtn) {
+        closeMindmapBtn.addEventListener('click', function() {
+            mindmapPanel.classList.remove('visible');
         });
     }
 
@@ -167,6 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
+        // ریست کردن حالت نمایش
+        continuousViewBtn.classList.add('active');
+        pagedViewBtn.classList.remove('active');
+        
         // بارگذاری کتاب
         try {
             console.log('Loading book...');
@@ -174,7 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Book loaded successfully');
         } catch (error) {
             console.error('Error opening book:', error);
-            // پیام خطا در خود تابع loadEpub نمایش داده می‌شود
         }
         
         window.NotesManager.clear();
@@ -268,4 +250,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
     renderLibrary();
 });
-``
