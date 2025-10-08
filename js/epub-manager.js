@@ -8,47 +8,53 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
-            // ایجاد یک div با استایل‌های مشخص برای محتوای کتاب
+            // ایجاد یک div با ID مشخص برای محتوای کتاب
             const contentDiv = document.createElement('div');
+            contentDiv.id = 'epub-content';
             contentDiv.style.cssText = `
                 width: 100%;
-                height: 100%;
-                min-height: 600px;
+                height: 600px;
                 background: white;
                 border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 overflow: auto;
                 padding: 20px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             `;
             bookContainer.appendChild(contentDiv);
             
             currentBook = ePub(file);
             
-            // صبر برای آماده شدن کتاب
-            await currentBook.ready;
-            
-            // رندر کتاب با روش ساده و مستقیم
-            currentRendition = currentBook.renderTo(contentDiv, {
+            // رندر کتاب با تنظیمات بسیار ساده
+            currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
-                flow: "scrolled",
-                manager: "default"
+                flow: "scrolled-doc",
+                manager: "continuous"
             });
             
             // نمایش کتاب
             await currentRendition.display();
             
-            // تنظیم مجدد اندازه بعد از نمایش
+            // بررسی و تنظیم iframe بعد از رندر
             setTimeout(() => {
-                if (currentRendition) {
-                    currentRendition.resize();
-                    // اطمینان از اینکه محتوا قابل مشاهده است
-                    const iframe = contentDiv.querySelector('iframe');
-                    if (iframe) {
-                        iframe.style.height = '100%';
-                        iframe.style.width = '100%';
-                        iframe.style.border = 'none';
-                        iframe.style.overflow = 'auto';
+                const iframe = document.querySelector('#epub-content iframe');
+                if (iframe) {
+                    iframe.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                        overflow: auto;
+                        background: white;
+                    `;
+                    
+                    // اطمینان از اینکه محتوای iframe قابل مشاهده است
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (iframeDoc && iframeDoc.body) {
+                        iframeDoc.body.style.direction = 'rtl';
+                        iframeDoc.body.style.fontFamily = 'Vazirmatn, sans-serif';
+                        iframeDoc.body.style.lineHeight = '1.8';
+                        iframeDoc.body.style.fontSize = '16px';
+                        iframeDoc.body.style.color = '#1e293b';
                     }
                 }
             }, 500);
@@ -65,8 +71,10 @@ const EpubManager = {
                     padding: 60px 20px;
                     text-align: center;
                     color: #64748b;
-                    height: 100%;
-                    min-height: 600px;
+                    height: 600px;
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 ">
                     <div style="
                         width: 80px;
