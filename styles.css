@@ -1,95 +1,108 @@
 :root {
-  --primary: #4a6fa5;
-  --secondary: #6c757d;
-  --bg: #f8f9fa;
-  --text: #212529;
-  --card: #fff;
-  --border: #dee2e6;
+  --bg: #f5f6fa;
+  --text: #1e272e;
+  --card: #ffffff;
+  --border: #dcdde1;
+  --primary: #007aff;
 }
 
 body.dark {
-  --primary: #70a1ff;
-  --secondary: #a4b0be;
-  --bg: #1e272e;
-  --text: #f1f2f6;
-  --card: #2f3640;
-  --border: #353b48;
+  --bg: #1e1e1e;
+  --text: #f5f5f7;
+  --card: #2c2c2e;
+  --border: #3a3a3c;
+  --primary: #0a84ff;
 }
 
 body {
-  font-family: 'Sahel', sans-serif;
+  font-family: 'Vazirmatn', sans-serif;
   margin: 0;
   background: var(--bg);
   color: var(--text);
   transition: background 0.3s, color 0.3s;
 }
 
-.app-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 15px;
+.glass {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-header {
+body.dark .glass {
+  background: rgba(44, 44, 46, 0.7);
+}
+
+.app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 15px;
   border-bottom: 1px solid var(--border);
-}
-
-h1 {
-  font-size: 1.4rem;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 button {
   background: var(--primary);
   color: white;
   border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 8px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s, background 0.3s;
+  font-size: 0.9rem;
+  transition: 0.3s ease;
 }
 
 button:hover {
-  background: #3a5a8a;
   transform: scale(1.05);
+  background: #005edc;
 }
 
-.book-item {
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 20px;
+  padding: 10px;
+}
+
+.book-card {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 15px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s ease;
 }
 
-.book-item:hover {
-  transform: translateY(-2px);
+.book-card:hover {
+  transform: translateY(-3px);
+}
+
+.book-cover {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+}
+
+.book-title {
+  padding: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
 }
 
 #viewer {
-  height: 70vh;
+  height: 75vh;
+  border-radius: 15px;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: auto;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 .reader-controls {
   display: flex;
   justify-content: space-between;
-  margin: 10px 0;
+  padding: 10px 15px;
 }
 
 #notes-panel {
@@ -98,38 +111,31 @@ button:hover {
   right: 0;
   left: 0;
   background: var(--card);
-  border-top: 2px solid var(--border);
-  border-radius: 15px 15px 0 0;
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
   padding: 15px;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
   max-height: 50vh;
   overflow-y: auto;
-  transition: transform 0.3s ease-in-out;
+}
+
+.note-item {
+  background: rgba(0,122,255,0.1);
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
 }
 
 .hidden {
   display: none !important;
 }
 
-.note-item {
-  background: rgba(74,111,165,0.1);
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  font-size: 0.9em;
-}
-
 @media (max-width: 600px) {
-  .app-container {
-    padding: 10px;
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 
-  button {
-    font-size: 0.85rem;
-    padding: 7px 10px;
-  }
-
-  h1 {
-    font-size: 1.2rem;
+  #viewer {
+    height: 65vh;
   }
 }
