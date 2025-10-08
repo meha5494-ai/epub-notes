@@ -1,6 +1,5 @@
-const CACHE_NAME = 'epub-notes-cache-v2';
+const CACHE_NAME = 'epub-notes-cache-v3';
 const urlsToCache = [
-    // آدرس دهی کاملاً نسبی
     './', 
     'index.html',
     'styles.css',
@@ -13,13 +12,14 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-    // Perform install steps
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
                 console.log('Opened cache');
-                // تلاش برای کش کردن فایل‌های اصلی
                 return cache.addAll(urlsToCache);
+            })
+            .catch(error => {
+                console.error('Cache failed:', error);
             })
     );
 });
@@ -31,7 +31,23 @@ self.addEventListener('fetch', event => {
                 if (response) {
                     return response;
                 }
-                return fetch(event.request);
+                return fetch(event.request)
+                    .then(response => {
+                        // Don't cache non-successful responses
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+                        
+                        // Clone the response since it's a stream
+                        const responseToCache = response.clone();
+                        
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        
+                        return response;
+                    });
             })
     );
 });
@@ -43,10 +59,10 @@ self.addEventListener('activate', event => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        // حذف نسخه‌های قدیمی کش
                         return caches.delete(cacheName);
                     }
-                })
+                    return null;
+                }).filter(Boolean)
             );
         })
     );
