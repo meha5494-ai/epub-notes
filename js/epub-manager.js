@@ -24,6 +24,7 @@ const EpubManager = {
             
             // ایجاد کتاب با فایل صحیح
             currentBook = ePub(file);
+            window.currentBook = currentBook; // ذخیره در window برای دسترسی عمومی
             
             // تنظیمات رندر بهینه
             currentRendition = currentBook.renderTo("epub-content", {
@@ -35,7 +36,7 @@ const EpubManager = {
             
             await currentRendition.display();
             
-            // تنظیمات استایل iframe با تأخیر بیشتر
+            // تنظیمات استایل iframe بلافاصله
             setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
@@ -55,13 +56,27 @@ const EpubManager = {
                         iframeDoc.body.style.fontSize = '16px';
                         iframeDoc.body.style.color = '#1e293b';
                         iframeDoc.body.style.padding = '20px';
+                        iframeDoc.body.style.margin = '0';
                         
                         // پنهان کردن اسکرول‌بارهای اضافی
                         iframeDoc.documentElement.style.overflow = 'hidden';
                         iframeDoc.body.style.overflow = 'auto';
                     }
                 }
-            }, 1000);
+            }, 500);
+            
+            // افزودن رویداد ردیابی پیشرفت
+            currentRendition.on('relocated', (location) => {
+                this.updateProgress(location.start / location.total * 100);
+                this.updatePageInfo(location.start, location.total);
+                this.saveReadingPosition(id, location.start);
+            });
+            
+            // بازیابی آخرین موقعیت خواندن
+            const lastPosition = this.getReadingPosition(id);
+            if (lastPosition) {
+                await currentRendition.display(lastPosition);
+            }
             
             return currentRendition;
         } catch (e) {
@@ -86,6 +101,8 @@ const EpubManager = {
         
         if (progressFill) {
             progressFill.style.width = `${percent}%`;
+            // افزودن انیمیشن به نوار پیشرفت
+            progressFill.style.transition = 'width 0.5s ease';
         }
         if (progressText) {
             progressText.textContent = `${Math.round(percent)}%`;
@@ -94,13 +111,9 @@ const EpubManager = {
 
     updatePageInfo: (current, total) => {
         const pageInfo = document.getElementById('page-info');
-        const pageInfoNav = document.getElementById('page-info-nav');
         
         if (pageInfo) {
             pageInfo.textContent = `صفحه ${current} از ${total}`;
-        }
-        if (pageInfoNav) {
-            pageInfoNav.textContent = `صفحه ${current} از ${total}`;
         }
     },
 
@@ -122,12 +135,12 @@ const EpubManager = {
                 }))
             };
             
-            // ایجاد SVG برای مایند مپ
-            const width = 300;
-            const height = 400;
-            
             // پاک کردن محتوای قبلی
             mindmapContent.innerHTML = '';
+            
+            // ایجاد SVG برای مایند مپ
+            const width = mindmapContent.offsetWidth;
+            const height = 400;
             
             const svg = d3.select("#mindmap-content")
                 .append("svg")
@@ -190,6 +203,29 @@ const EpubManager = {
         if (currentRendition) {
             currentRendition.next();
         }
+    },
+
+    setViewMode: (mode) => {
+        if (currentRendition) {
+            currentRendition.flow(mode === 'paged' ? 'paginated' : 'scrolled-doc');
+        }
+    },
+
+    saveReadingPosition: (bookId, position) => {
+        const positions = JSON.parse(localStorage.getItem('readingPositions') || '{}');
+        positions[bookId] = position;
+        localStorage.setItem('readingPositions', JSON.stringify(positions));
+    },
+
+    getReadingPosition: (bookId) => {
+        const positions = JSON.parse(localStorage.getItem('readingPositions') || '{}');
+        return positions[bookId] || null;
+    },
+
+    clearReadingPosition: (bookId) => {
+        const positions = JSON.parse(localStorage.getItem('readingPositions') || '{}');
+        delete positions[bookId];
+        localStorage.setItem('readingPositions', JSON.stringify(positions));
     },
 
     extractBookMetadata: async (file) => {
