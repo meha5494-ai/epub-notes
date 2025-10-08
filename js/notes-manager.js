@@ -4,20 +4,15 @@ export class NotesManager {
     }
 
     addNote(note) {
-        if (note && typeof note === 'object') {
-            this.notes.push(note);
-        }
+        if (note && typeof note === 'string') this.notes.push(note);
     }
 
-    getNotes(bookId = null) {
-        if (!bookId) return this.notes;
-        return this.notes.filter(n => n.bookId === bookId);
+    getNotes() {
+        return this.notes;
     }
 
     removeNote(index) {
-        if (index >= 0 && index < this.notes.length) {
-            this.notes.splice(index, 1);
-        }
+        if (index >= 0 && index < this.notes.length) this.notes.splice(index, 1);
     }
 }
 
