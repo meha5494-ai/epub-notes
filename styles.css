@@ -244,7 +244,7 @@ body.dark {
     color: var(--text);
 }
 
-/* Reader View - تغییرات برای نمایش صحیح محتوا */
+/* Reader View */
 .reader-header {
     background: var(--surface);
     padding: 16px 20px;
@@ -303,7 +303,7 @@ body.dark {
     flex-direction: column;
 }
 
-/* Book Container - تغییرات اصلی برای نمایش محتوا */
+/* Book Container */
 #book-container {
     background: var(--surface);
     border-radius: var(--radius);
@@ -337,6 +337,57 @@ body.dark {
     background: var(--surface) !important;
     overflow: auto !important;
     border-radius: var(--radius) !important;
+}
+
+/* Page Navigation */
+.page-navigation {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border-radius: 50px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 16px;
+    z-index: 100;
+}
+
+.page-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1rem;
+}
+
+.page-nav-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
+.page-nav-btn:disabled {
+    background: var(--surface-alt);
+    color: var(--text-light);
+    cursor: not-allowed;
+    transform: scale(1);
+}
+
+.page-info {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 100px;
+    text-align: center;
 }
 
 /* Error Container */
@@ -645,6 +696,31 @@ body.dark {
     #book-container {
         padding: 16px;
         font-size: 1rem;
+    }
+    
+    /* بهبود دکمه بازگشت برای موبایل */
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    /* بهبود ناوبری صفحات برای موبایل */
+    .page-navigation {
+        bottom: 10px;
+        padding: 6px 12px;
+        gap: 12px;
+    }
+    
+    .page-nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+    
+    .page-info {
+        font-size: 0.8rem;
+        min-width: 80px;
     }
     
     .bottom-sheet {
