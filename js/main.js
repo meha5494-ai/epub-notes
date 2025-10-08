@@ -14,11 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveNoteBtn = document.getElementById('save-note');
     const noteText = document.getElementById('note-text');
     const addNoteBtn = document.getElementById('add-note-btn');
-    const loadingOverlay = document.getElementById('loading-overlay');
 
     let books = [];
 
-    // اضافه کردن رویداد به دکمه بازگشت - روش مستقیم
+    // اضافه کردن رویداد به دکمه بازگشت
     if (backBtn) {
         backBtn.addEventListener('click', function() {
             console.log('Back button clicked');
@@ -89,32 +88,14 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
-        // نمایش لودینگ
-        loadingOverlay.style.display = 'flex';
-        
-        // بارگذاری کتاب بدون تاخیر اضافی
+        // بارگذاری کتاب بدون نمایش لودینگ
         try {
             console.log('Loading book...');
             await window.EpubManager.loadEpub(book.id, book.file, book.title);
             console.log('Book loaded successfully');
         } catch (error) {
             console.error('Error opening book:', error);
-            loadingOverlay.style.display = 'none';
-            
-            // نمایش پیام خطا
-            const bookContainer = document.getElementById('book-container');
-            bookContainer.innerHTML = `
-                <div class="error-container">
-                    <div class="error-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <h3>خطا در بارگذاری کتاب</h3>
-                    <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
-                    <button class="primary-btn" onclick="location.reload()">
-                        <i class="fas fa-redo"></i> تلاش مجدد
-                    </button>
-                </div>
-            `;
+            // پیام خطا در خود تابع loadEpub نمایش داده می‌شود
         }
         
         window.NotesManager.clear();
