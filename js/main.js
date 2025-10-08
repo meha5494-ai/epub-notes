@@ -13,10 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelNoteBtn = document.getElementById('cancel-note');
     const saveNoteBtn = document.getElementById('save-note');
     const noteText = document.getElementById('note-text');
+    const addNoteBtn = document.getElementById('add-note-btn');
 
+    // بارگذاری کتاب‌ها از localStorage
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
-    // Save books to localStorage
+    // ذخیره کتاب‌ها در localStorage
     function saveBooks() {
         localStorage.setItem('epubBooks', JSON.stringify(books));
     }
@@ -27,10 +29,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = e.target.files[0];
         if (!file) return;
         
-        const metadata = await window.EpubManager.extractBookMetadata(file);
-        books.push(metadata);
-        saveBooks();
-        renderLibrary();
+        try {
+            // استخراج متادیتای کتاب
+            const metadata = await window.EpubManager.extractBookMetadata(file);
+            
+            // افزودن کتاب به آرایه
+            books.push(metadata);
+            
+            // ذخیره در localStorage
+            saveBooks();
+            
+            // به‌روزرسانی نمایش کتابخانه
+            renderLibrary();
+        } catch (error) {
+            console.error('Error adding book:', error);
+            alert('خطا در افزودن کتاب. لطفاً دوباره تلاش کنید.');
+        }
     });
 
     function renderLibrary() {
@@ -91,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notesList.appendChild(div);
         });
         
-        // Add delete functionality
+        // افزودن رویداد حذف یادداشت
         document.querySelectorAll('.delete-note').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
@@ -115,6 +129,12 @@ document.addEventListener('DOMContentLoaded', function() {
         notesSheet.classList.remove('visible');
     });
 
+    // دکمه افزودن یادداشت جدید
+    addNoteBtn.addEventListener('click', () => {
+        addNotePopover.classList.add('visible');
+        noteText.focus();
+    });
+
     cancelNoteBtn.addEventListener('click', () => {
         addNotePopover.classList.remove('visible');
         noteText.value = '';
@@ -135,11 +155,11 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     });
 
-    // Load saved theme
+    // بارگذاری تم ذخیره شده
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark');
     }
 
-    // Initial render
+    // نمایش اولیه کتابخانه
     renderLibrary();
 });
