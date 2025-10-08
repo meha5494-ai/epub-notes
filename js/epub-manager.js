@@ -1,14 +1,12 @@
 // js/epub-manager.js
 import { notesManagerInstance } from './notes-manager.js';
 
-// DOM Elements
 const bookContainer = document.getElementById('book-container');
 const loadingOverlay = document.getElementById('loading-overlay');
 const popover = document.getElementById('add-note-popover');
 const notesSheet = document.getElementById('notes-sheet');
 const noteTextInput = document.getElementById('note-text-input');
 
-// Local variables for EPUB state
 let currentBook = null;
 let currentRendition = null;
 let currentBookId = null;
@@ -45,7 +43,6 @@ export const EpubManager = {
             });
 
             loadingOverlay.classList.add('hidden');
-
             EpubManager.setupSelectionHandler();
             return currentRendition;
 
@@ -63,11 +60,7 @@ export const EpubManager = {
         const metadata = book.metadata;
 
         let coverDataUrl = null;
-        try {
-            coverDataUrl = await book.coverUrl();
-        } catch (e) {
-            console.warn('Could not extract cover image:', e);
-        }
+        try { coverDataUrl = await book.coverUrl(); } catch (e) { console.warn(e); }
 
         return {
             id: bookId,
@@ -83,11 +76,8 @@ export const EpubManager = {
 
         currentRendition.on('selected', (cfiRange, contents) => {
             const text = currentRendition.getRange(cfiRange).toString().trim();
-            if (text.length > 0) {
-                EpubManager.showAddNotePopover(cfiRange, text, contents);
-            } else {
-                EpubManager.clearSelection();
-            }
+            if (text.length > 0) EpubManager.showAddNotePopover(cfiRange, text, contents);
+            else EpubManager.clearSelection();
         });
 
         currentRendition.hooks.render.register(async (contents) => {
@@ -145,15 +135,14 @@ export const EpubManager = {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             const iframeRect = contents.iframe.getBoundingClientRect();
-
             const posY = iframeRect.top + rect.bottom;
+
             popover.style.left = '50%';
             popover.style.transform = 'translate(-50%, -50%)';
             popover.style.top = `${posY + 20}px`;
 
-            if (posY + popover.offsetHeight > window.innerHeight) {
+            if (posY + popover.offsetHeight > window.innerHeight)
                 popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
-            }
         }
 
         popover.classList.add('visible');
