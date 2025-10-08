@@ -19,7 +19,6 @@ const EpubManager = {
                 spread: 'none'
             });
             
-            // اضافه کردن رویداد برای نمایش خطا در صورت عدم بارگذاری
             currentRendition.on('relocated', (location) => {
                 console.log('Book loaded to location:', location);
             });
@@ -31,11 +30,14 @@ const EpubManager = {
         } catch (e) {
             console.error('Error loading EPUB', e);
             loadingOverlay.innerHTML = `
-                <div class="error-message">
-                    <span class="material-icons">error</span>
-                    <p>خطا در بارگذاری کتاب</p>
-                    <button class="mdc-button mdc-button--outlined" onclick="location.reload()">
-                        تلاش مجدد
+                <div class="loading-card">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>خطا در بارگذاری کتاب</h3>
+                    <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
+                    <button class="primary-btn" onclick="location.reload()">
+                        <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
                 </div>`;
             loadingOverlay.style.display = 'flex';
@@ -62,5 +64,4 @@ const EpubManager = {
     }
 };
 
-// اضافه کردن به شیء window برای دسترسی در main.js
 window.EpubManager = EpubManager;
