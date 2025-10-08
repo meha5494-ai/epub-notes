@@ -244,7 +244,7 @@ body.dark {
     color: var(--text);
 }
 
-/* Reader View */
+/* Reader View - تمرکز بر دکمه بازگشت */
 .reader-header {
     background: var(--surface);
     padding: 16px 20px;
@@ -258,8 +258,8 @@ body.dark {
 }
 
 .back-btn {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: var(--primary);
     color: white;
@@ -272,12 +272,12 @@ body.dark {
     font-size: 1.2rem;
     box-shadow: var(--shadow);
     z-index: 101;
+    position: relative;
 }
 
 .back-btn:hover {
     background: var(--primary-dark);
     transform: scale(1.1);
-    box-shadow: var(--shadow-lg);
 }
 
 .book-title-container {
@@ -304,8 +304,9 @@ body.dark {
     flex-direction: column;
 }
 
+/* Book Container - تمرکز بر نمایش محتوای کتاب */
 #book-container {
-    background: var(--background);
+    background: var(--surface);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 20px;
@@ -314,32 +315,23 @@ body.dark {
     line-height: 1.8;
     font-size: 1.1rem;
     color: var(--text);
-    min-height: 70vh;
+    min-height: 500px;
     position: relative;
-}
-
-#epub-content {
     width: 100%;
-    height: 100%;
-    min-height: 70vh;
-    position: relative;
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
 }
 
-#epub-content > div {
+#book-container > div {
     width: 100% !important;
     height: 100% !important;
-    min-height: 70vh !important;
+    min-height: 500px !important;
     background: var(--surface) !important;
 }
 
-#epub-content iframe {
+#book-container iframe {
     border: none;
     width: 100%;
     height: 100%;
-    min-height: 70vh;
+    min-height: 500px;
     background: var(--surface);
     border-radius: var(--radius);
 }
@@ -425,7 +417,7 @@ body.dark {
     text-align: center;
     color: var(--text-light);
     height: 100%;
-    min-height: 70vh;
+    min-height: 500px;
 }
 
 .error-container .error-icon {
