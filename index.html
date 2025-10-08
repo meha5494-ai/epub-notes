@@ -1,40 +1,52 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>کتاب‌خوان من</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/idb-keyval.iife.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+  <title>کتابخانه من 📚</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v5.0.1/dist/font-face.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-container">
     <header>
-      <h1>📚 کتاب‌خوان من</h1>
-      <button id="upload-btn">افزودن کتاب</button>
-      <input type="file" id="file-input" accept=".epub" hidden />
+      <h1>کتابخانه من</h1>
+      <div class="header-actions">
+        <button id="theme-toggle">🌙</button>
+        <button id="install-btn">⬇️ نصب</button>
+      </div>
     </header>
 
-    <section id="book-list-section">
-      <h2>کتاب‌های من</h2>
-      <div id="book-list"></div>
+    <section class="upload-section">
+      <input type="file" id="book-upload" accept=".epub" hidden>
+      <button id="upload-btn">📤 افزودن کتاب جدید</button>
+    </section>
+
+    <section class="book-list">
+      <h2>📚 کتاب‌های من</h2>
+      <div id="books-container"></div>
     </section>
 
     <section id="reader-section" class="hidden">
+      <div class="reader-controls">
+        <button id="back-btn">🔙 بازگشت</button>
+        <button id="add-note-btn">📝 یادداشت</button>
+      </div>
       <div id="viewer"></div>
-      <button id="add-note-btn" class="fab">📝</button>
     </section>
 
-    <aside id="notes-panel" class="hidden">
-      <h3>یادداشت‌ها</h3>
+    <section id="notes-panel" class="hidden">
+      <h3>یادداشت‌های من</h3>
       <div id="notes-container"></div>
-      <button id="close-notes-btn">بستن</button>
-    </aside>
+    </section>
   </div>
 
-  <script src="epub-manager.js"></script>
-  <script src="notes-manager.js"></script>
-  <script src="main.js"></script>
+  <script src="libs/epub.min.js"></script>
+  <script src="libs/idb-keyval.min.js"></script>
+  <script src="js/epub-manager.js"></script>
+  <script src="js/notes-manager.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
