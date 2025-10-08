@@ -1,283 +1,98 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>کتابخانه شخصی</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>کتابخانه شخصی | EPUB Notes</title>
+    
+    <meta name="theme-color" content="#FFFFFF"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <!-- فونت وزیرمتن -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
 
-  <!-- آیکون‌ها -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    :root {
-      --primary: #007aff;
-      --bg-light: #f9f9f9;
-      --bg-dark: #1c1c1e;
-      --text-light: #1c1c1e;
-      --text-dark: #f9f9f9;
-      --card-light: #ffffff;
-      --card-dark: #2c2c2e;
-      --border-light: #e5e5ea;
-      --border-dark: #3a3a3c;
-    }
-
-    [data-theme="light"] {
-      --bg: var(--bg-light);
-      --text: var(--text-light);
-      --card: var(--card-light);
-      --border: var(--border-light);
-    }
-    [data-theme="dark"] {
-      --bg: var(--bg-dark);
-      --text: var(--text-dark);
-      --card: var(--card-dark);
-      --border: var(--border-dark);
-    }
-
-    body {
-      font-family: 'Vazirmatn', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .theme-toggle {
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .container {
-      padding: 16px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .upload-btn {
-      display: block;
-      width: 100%;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 14px;
-      border-radius: 14px;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-
-    .book-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 16px;
-    }
-
-    .book-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      text-align: center;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-      cursor: pointer;
-    }
-
-    .book-card:hover {
-      transform: scale(1.03);
-    }
-
-    .book-cover {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-      background: #ccc;
-    }
-
-    .book-title {
-      padding: 10px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    #reader-section {
-      display: none;
-      height: 80vh;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: var(--card);
-      margin-top: 16px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 600px) {
-      .book-title { font-size: 0.8rem; }
-      .upload-btn { font-size: 0.9rem; }
-      header h1 { font-size: 1.05rem; }
-    }
-  </style>
+    <link rel="stylesheet" href="styles.css">
+    
 </head>
-<body data-theme="light">
-  <header>
-    <h1>کتابخانه من</h1>
-    <button class="theme-toggle" id="theme-btn" aria-label="Toggle theme">
-      <i data-lucide="moon"></i>
-    </button>
-  </header>
+<body>
+    <div id="library-view" class="view active">
+        <header class="ios-header">
+            <h1 class="ios-title">کتاب‌های من</h1>
+            <div class="actions">
+                <button id="theme-toggle" class="icon-button ios-button">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <button id="upload-button" class="ios-button upload-button">
+                    <span class="icon">+</span>
+                    افزودن کتاب
+                </button>
+            </div>
+        </header>
 
-  <div class="container">
-    <input type="file" id="book-upload" accept=".epub" hidden />
-    <button class="upload-btn" id="upload-btn">افزودن کتاب جدید</button>
+        <input type="file" id="epub-file-input" accept=".epub" style="display: none;">
 
-    <div class="book-grid" id="book-grid"></div>
-
-    <section id="reader-section">
-      <div id="viewer"></div>
-      <div style="margin-top:10px;text-align:center;">
-        <button class="upload-btn" id="back-btn">بازگشت</button>
-      </div>
-    </section>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
-
-  <script>
-    lucide.createIcons(); // آیکون‌ها رو رندر می‌کنه
-
-    const themeBtn = document.getElementById("theme-btn");
-    const uploadBtn = document.getElementById("upload-btn");
-    const fileInput = document.getElementById("book-upload");
-    const bookGrid = document.getElementById("book-grid");
-    const readerSection = document.getElementById("reader-section");
-    const viewer = document.getElementById("viewer");
-    const backBtn = document.getElementById("back-btn");
-
-    let books = JSON.parse(localStorage.getItem("books") || "[]");
-
-    // 🌙 سوئیچ تم با آیکون
-    themeBtn.addEventListener("click", () => {
-      const theme = document.body.getAttribute("data-theme");
-      const newTheme = theme === "light" ? "dark" : "light";
-      document.body.setAttribute("data-theme", newTheme);
-      themeBtn.innerHTML = `<i data-lucide="${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
-      lucide.createIcons();
-    });
-
-    // 📤 آپلود کتاب
-    uploadBtn.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const book = ePub(arrayBuffer);
-
-      try {
-        const meta = await book.loaded.metadata;
-        let coverUrl = null;
-        try { coverUrl = await book.coverUrl(); } catch {}
-        
-        const newBook = {
-          id: Date.now(),
-          name: meta.title || file.name,
-          cover: coverUrl,
-          data: arrayBufferToBase64(arrayBuffer)
-        };
-
-        books.push(newBook);
-        localStorage.setItem("books", JSON.stringify(books));
-        renderBooks();
-      } catch (err) {
-        alert("خطا در خواندن فایل EPUB: " + err.message);
-      }
-    });
-
-    // 📚 نمایش گرید کتاب‌ها
-    function renderBooks() {
-      if (books.length === 0) {
-        bookGrid.innerHTML = `<p style="text-align:center;color:gray;">کتابی اضافه نشده است</p>`;
-        return;
-      }
-      bookGrid.innerHTML = books.map(b => `
-        <div class="book-card" onclick="openBook(${b.id})">
-          <img class="book-cover" src="${b.cover || 'https://via.placeholder.com/150x200?text=Cover'}" alt="cover">
-          <div class="book-title">${b.name}</div>
+        <div id="book-grid" class="ios-grid">
+            <p id="empty-message">کتابخانه‌ی شما خالی است. 📚</p>
         </div>
-      `).join('');
-    }
+    </div>
 
-    // 📖 باز کردن کتاب
-    window.openBook = async (id) => {
-      const b = books.find(x => x.id === id);
-      if (!b) return alert("کتاب یافت نشد");
+    <div id="reader-view" class="view">
+        <header class="ios-header reader-header">
+            <button id="back-to-library" class="ios-button back-button">
+                <span class="icon">➜</span>
+                کتابخانه
+            </button>
+            <h2 id="reader-title" class="ios-title reader-title">عنوان کتاب</h2>
+            <button id="toggle-notes" class="ios-button notes-button">
+                <span class="icon">📝</span>
+                یادداشت‌ها
+            </button>
+        </header>
 
-      bookGrid.classList.add("hidden");
-      uploadBtn.classList.add("hidden");
-      readerSection.style.display = "block";
+        <div id="reader-area" class="reader-content">
+            <div id="book-container"></div>
+            <div id="loading-overlay" class="loading-overlay">در حال بارگذاری...</div>
+        </div>
+    </div>
 
-      const book = ePub(base64ToArrayBuffer(b.data));
-      const rendition = book.renderTo(viewer, {
-        width: "100%",
-        height: "100%"
-      });
-      rendition.display();
-    };
+    <div id="notes-sheet" class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-content">
+            <div class="sheet-header">
+                <h3>یادداشت‌ها</h3>
+                <button id="close-notes-sheet" class="icon-button ios-button">
+                    <span class="icon">✕</span>
+                </button>
+            </div>
+            <div id="notes-list" class="notes-list">
+                <p id="no-notes-message">هنوز هیچ یادداشتی برای این کتاب ثبت نشده است.</p>
+            </div>
+        </div>
+    </div>
 
-    // 🔙 بازگشت
-    backBtn.addEventListener("click", () => {
-      readerSection.style.display = "none";
-      bookGrid.classList.remove("hidden");
-      uploadBtn.classList.remove("hidden");
-    });
+    <div id="add-note-popover" class="popover">
+        <textarea id="note-text-input" placeholder="متن یادداشت..."></textarea>
+        <div class="popover-actions">
+            <button id="cancel-note" class="ios-button cancel-button">لغو</button>
+            <button id="save-note" class="ios-button primary-button">ذخیره</button>
+        </div>
+    </div>
 
-    // 🧩 helper functions
-    function arrayBufferToBase64(buffer) {
-      let binary = "";
-      const bytes = new Uint8Array(buffer);
-      const len = bytes.byteLength;
-      for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
-      return window.btoa(binary);
-    }
+    <script src="js/notes-manager.js"></script>
+    <script src="js/epub-manager.js"></script>
+    <script src="js/main.js"></script>
 
-    function base64ToArrayBuffer(base64) {
-      const binary_string = window.atob(base64);
-      const len = binary_string.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) bytes[i] = binary_string.charCodeAt(i);
-      return bytes.buffer;
-    }
-
-    renderBooks();
-  </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker: Registered'))
+                    .catch(err => console.error('Service Worker: Registration failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
