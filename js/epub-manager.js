@@ -13,10 +13,15 @@ const EpubManager = {
             // ایجاد یک div با اندازه مشخص برای محتوای کتاب
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
-            contentDiv.style.width = '100%';
-            contentDiv.style.height = '100%';
-            contentDiv.style.minHeight = '70vh';
-            contentDiv.style.position = 'relative';
+            contentDiv.style.cssText = `
+                width: 100%;
+                height: 100%;
+                min-height: 70vh;
+                position: relative;
+                background: var(--surface);
+                border-radius: 12px;
+                overflow: hidden;
+            `;
             bookContainer.appendChild(contentDiv);
             
             currentBook = ePub(file);
@@ -34,16 +39,16 @@ const EpubManager = {
             });
             
             // رویداد برای اطمینان از بارگذاری کامل
-            let sectionsLoaded = 0;
+            let renderCount = 0;
             currentRendition.on('rendered', (section) => {
-                sectionsLoaded++;
-                console.log(`Section ${sectionsLoaded} rendered`);
+                renderCount++;
+                console.log(`Section ${renderCount} rendered`);
                 
                 // بعد از رندر شدن اولین بخش، لودینگ را پنهان کن
-                if (sectionsLoaded === 1) {
+                if (renderCount === 1) {
                     setTimeout(() => {
                         loadingOverlay.style.display = 'none';
-                    }, 300);
+                    }, 500);
                 }
             });
             
@@ -60,7 +65,7 @@ const EpubManager = {
                 if (loadingOverlay.style.display === 'flex') {
                     loadingOverlay.style.display = 'none';
                 }
-            }, 1000);
+            }, 2000);
             
             return currentRendition;
         } catch (e) {
