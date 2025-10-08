@@ -4,22 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>کتابخانه شخصی | EPUB Notes</title>
-    
     <meta name="theme-color" content="#FFFFFF"/>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-
-    <!-- JSZip باید قبل از epub.js باشد -->
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
-
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Library View -->
     <div id="library-view" class="view active">
         <header class="ios-header">
             <h1 class="ios-title">کتاب‌های من</h1>
@@ -33,15 +24,12 @@
                 </button>
             </div>
         </header>
-
         <input type="file" id="epub-file-input" accept=".epub" style="display: none;">
-
         <div id="book-grid" class="ios-grid">
             <p id="empty-message">کتابخانه‌ی شما خالی است. 📚</p>
         </div>
     </div>
 
-    <!-- Reader View -->
     <div id="reader-view" class="view">
         <header class="ios-header reader-header">
             <button id="back-to-library" class="ios-button back-button">
@@ -54,14 +42,12 @@
                 یادداشت‌ها
             </button>
         </header>
-
         <div id="reader-area" class="reader-content">
             <div id="book-container"></div>
             <div id="loading-overlay" class="loading-overlay">در حال بارگذاری...</div>
         </div>
     </div>
 
-    <!-- Notes Sheet -->
     <div id="notes-sheet" class="bottom-sheet">
         <div class="sheet-handle"></div>
         <div class="sheet-content">
@@ -72,12 +58,11 @@
                 </button>
             </div>
             <div id="notes-list" class="notes-list">
-                <p id="no-notes-message">هنوز هیچ یادداشتی برای این کتاب ثبت نشده است.</p>
+                <p id="no-notes-message">هنوز هیچ یادداشتی ثبت نشده است.</p>
             </div>
         </div>
     </div>
 
-    <!-- Add Note Popover -->
     <div id="add-note-popover" class="popover">
         <textarea id="note-text-input" placeholder="متن یادداشت..."></textarea>
         <div class="popover-actions">
@@ -86,7 +71,7 @@
         </div>
     </div>
 
-    <!-- Main Script as Module -->
+    <!-- Main JS as module -->
     <script type="module" src="js/main.js"></script>
 
     <script>
