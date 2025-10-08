@@ -17,15 +17,16 @@ export const EpubManager={
                 height:'100%',
                 method:'scrolled-doc',
                 manager:'default',
-                flow: 'scrolled-doc' // اضافه کردن این خط
+                flow: 'scrolled-doc',
+                spread: 'none'
             });
             await currentRendition.display();
+            currentRendition.resize();
             loadingOverlay.style.display='none';
             return currentRendition;
         }catch(e){ 
             console.error('Error loading EPUB',e); 
-            loadingOverlay.innerHTML='خطا در بارگذاری کتاب';
-            loadingOverlay.style.display='flex'; // اطمینان از نمایش خطا
+            loadingOverlay.textContent='خطا در بارگذاری کتاب';
         }
     },
 
@@ -38,6 +39,3 @@ export const EpubManager={
         return {id:bookId,title:file.name.replace('.epub',''),author:'ناشناس',cover:coverData,epubFile:file};
     }
 };
-
-// اضافه کردن این خط برای دسترسی در main.js
-window.EpubManager = EpubManager;
