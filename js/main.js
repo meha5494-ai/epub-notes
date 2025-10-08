@@ -1,51 +1,75 @@
-const uploadBtn = document.getElementById("upload-btn");
-const fileInput = document.getElementById("file-input");
-const bookList = document.getElementById("book-list");
-const readerSection = document.getElementById("reader-section");
-const notesPanel = document.getElementById("notes-panel");
-const addNoteBtn = document.getElementById("add-note-btn");
-const closeNotesBtn = document.getElementById("close-notes-btn");
+document.addEventListener("DOMContentLoaded", () => {
+  console.log('📱 اپلیکیشن اجرا شد');
 
-uploadBtn.onclick = () => fileInput.click();
+  const uploadBtn = document.getElementById('upload-btn');
+  const bookUpload = document.getElementById('book-upload');
+  const booksContainer = document.getElementById('books-container');
+  const readerSection = document.getElementById('reader-section');
+  const backBtn = document.getElementById('back-btn');
+  const addNoteBtn = document.getElementById('add-note-btn');
+  const notesPanel = document.getElementById('notes-panel');
+  const themeToggle = document.getElementById('theme-toggle');
 
-fileInput.onchange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const title = file.name.replace(".epub", "");
-  await epubManager.loadBook(file, title);
-  readerSection.classList.remove("hidden");
-};
+  // تغییر تم
+  themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    themeToggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+  });
 
-window.loadBookList = async () => {
-  const keys = await idbKeyval.keys();
-  const books = keys.filter(k => k.startsWith("book_"));
-  bookList.innerHTML = books.length ? books.map(k => {
-    const title = k.replace("book_", "");
-    return `<div class="book-item" onclick="openBook('${title}')">${title}</div>`;
-  }).join("") : "<p>کتابی وجود ندارد.</p>";
-};
+  // بارگذاری کتاب‌ها از IndexedDB
+  async function loadBookList() {
+    const keys = await idbKeyval.keys();
+    booksContainer.innerHTML = '';
 
-window.openBook = async (title) => {
-  const data = await idbKeyval.get(`book_${title}`);
-  if (!data) return;
-  const file = new Blob([data], { type: "application/epub+zip" });
-  await epubManager.loadBook(file, title);
-  readerSection.classList.remove("hidden");
-};
+    for (const key of keys) {
+      if (key.startsWith('book_')) {
+        const bookInfo = await idbKeyval.get(key);
+        const item = document.createElement('div');
+        item.className = 'book-item';
+        item.textContent = bookInfo.name;
+        item.addEventListener('click', () => openBook(bookInfo));
+        booksContainer.appendChild(item);
+      }
+    }
 
-window.addEventListener("text-selected", (e) => {
-  const { cfiRange, text } = e.detail;
-  const noteText = prompt("متن یادداشت خود را وارد کنید:");
-  if (noteText) {
-    notesManager.addNote("book", cfiRange, text, noteText);
-    notesPanel.classList.remove("hidden");
+    if (!booksContainer.innerHTML) {
+      booksContainer.innerHTML = '<p>هنوز کتابی اضافه نکردی 📖</p>';
+    }
+  }
+
+  loadBookList();
+
+  uploadBtn.addEventListener('click', () => bookUpload.click());
+  bookUpload.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const bookData = await file.arrayBuffer();
+    await idbKeyval.set(`book_${Date.now()}`, { name: file.name, data: bookData });
+    loadBookList();
+  });
+
+  async function openBook(bookInfo) {
+    readerSection.classList.remove('hidden');
+    document.querySelector('.book-list').classList.add('hidden');
+    const book = ePub(bookInfo.data);
+    const rendition = book.renderTo("viewer", { width: "100%", height: "100%" });
+    await rendition.display();
+  }
+
+  backBtn.addEventListener('click', () => {
+    readerSection.classList.add('hidden');
+    document.querySelector('.book-list').classList.remove('hidden');
+  });
+
+  addNoteBtn.addEventListener('click', () => {
+    notesPanel.classList.toggle('hidden');
+  });
+
+  // سرویس ورکر
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('✅ Service Worker ثبت شد'))
+      .catch(err => console.warn('Service Worker Error:', err));
   }
 });
-
-addNoteBtn.onclick = () => notesPanel.classList.toggle("hidden");
-closeNotesBtn.onclick = () => notesPanel.classList.add("hidden");
-
-window.onload = () => {
-  notesManager.loadNotes();
-  loadBookList();
-};
