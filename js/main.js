@@ -1,7 +1,7 @@
 // js/main.js
 
-// دسترسی به کلاس‌ها و توابع از فضای گلوبال (بدون استفاده از const یا let در تعریف مجدد)
-// ما به سادگی از متغیرهایی که قبلاً توسط فایل‌های notes-manager.js و epub-manager.js در window تعریف شده‌اند، استفاده می‌کنیم.
+// دسترسی به کلاس‌ها و توابع از فضای گلوبال (بدون تعریف مجدد با const یا let)
+// توجه: این متغیرها در اینجا به صورت محلی (Local) تعریف می‌شوند اما مقدار خود را از window می‌گیرند.
 const NotesManager = window.NotesManager;
 const EpubManager = window.EpubManager; 
 
@@ -247,3 +247,4 @@ cancelNoteButton.addEventListener('click', () => {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', renderBooks);
+
