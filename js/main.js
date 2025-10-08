@@ -32,10 +32,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (books.length === 0) {
             bookGrid.innerHTML = `
                 <div class="empty-state">
-                    <span class="material-icons empty-icon">auto_stories</span>
-                    <p>کتابخانه شما خالی است</p>
-                    <button class="mdc-button mdc-button--outlined" onclick="document.getElementById('upload-button').click()">
-                        افزودن کتاب
+                    <div class="empty-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>کتابخانه شما خالی است</h3>
+                    <p>برای شروع، یک کتاب EPUB اضافه کنید</p>
+                    <button class="secondary-btn" onclick="document.getElementById('upload-button').click()">
+                        <i class="fas fa-upload"></i> افزودن کتاب
                     </button>
                 </div>`;
             return;
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'book-placeholder';
-                placeholder.textContent = '📖';
+                placeholder.innerHTML = '<i class="fas fa-book-open"></i>';
                 div.appendChild(placeholder);
             }
             
@@ -72,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
-        // اطمینان از نمایش کامل view قبل از بارگذاری کتاب
         setTimeout(async () => {
             await window.EpubManager.loadEpub(book.id, book.file, book.title);
         }, 300);
@@ -98,14 +100,13 @@ document.addEventListener('DOMContentLoaded', function() {
             div.className = 'note-item';
             div.innerHTML = `
                 <div class="note-content">${note}</div>
-                <button class="mdc-icon-button delete-note" data-index="${index}">
-                    <span class="material-icons">delete</span>
+                <button class="delete-note" data-index="${index}">
+                    <i class="fas fa-trash"></i>
                 </button>
             `;
             notesList.appendChild(div);
         });
         
-        // افزودن رویداد حذف یادداشت
         document.querySelectorAll('.delete-note').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const index = parseInt(e.currentTarget.dataset.index);
@@ -115,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // دکمه بازگشت به کتابخانه
     backBtn.addEventListener('click', () => {
         readerView.classList.remove('active');
         libraryView.classList.add('active');
@@ -130,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function() {
         notesSheet.classList.remove('visible');
     });
 
-    // دکمه افزودن یادداشت جدید
     addNoteBtn.addEventListener('click', () => {
         addNotePopover.classList.add('visible');
         noteText.focus();
@@ -153,8 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark');
+        const icon = themeToggle.querySelector('i');
+        if (document.body.classList.contains('dark')) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
     });
 
-    // نمایش اولیه کتابخانه
     renderLibrary();
 });
