@@ -31,6 +31,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // اضافه کردن رویداد به دکمه بازگشت
     if (backBtn) {
         backBtn.addEventListener('click', function() {
+            // ذخیره موقعیت فعلی کتاب
+            if (window.currentBookId) {
+                const rendition = window.EpubManager.currentRendition;
+                if (rendition) {
+                    rendition.location().then(loc => {
+                        window.EpubManager.saveReadingPosition(window.currentBookId, loc.start);
+                    });
+                }
+            }
+            
             readerView.classList.remove('active');
             libraryView.classList.add('active');
         });
@@ -140,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
             titleDiv.textContent = book.title;
             div.appendChild(titleDiv);
             
-            // دکمه حذف کتاب با ظاهر بهتر
+            // دکمه حذف کتاب همیشه قابل مشاهده
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-book-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -150,6 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (confirm('آیا از حذف این کتاب مطمئن هستید؟')) {
                     books.splice(index, 1);
                     localStorage.setItem('epubBooks', JSON.stringify(books));
+                    // حذف موقعیت خواندن
+                    window.EpubManager.clearReadingPosition(book.id);
                     renderLibrary();
                 }
             };
@@ -162,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function openBook(book) {
         console.log('Opening book:', book.title);
+        window.currentBookId = book.id; // ذخیره ID کتاب فعلی
         libraryView.classList.remove('active');
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
