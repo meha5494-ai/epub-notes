@@ -45,5 +45,7 @@ function renderLibrary(){
     });
 }
 
-themeToggle.addEventListener('click',()=>document.body.classList.toggle('dark'));
+themeToggle.addEventListener('click',()=>{
+    document.body.classList.toggle('dark');
+});
 backButton.addEventListener('click',()=>readerView.classList.remove('active'));
