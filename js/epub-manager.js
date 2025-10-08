@@ -8,11 +8,12 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
+            // ایجاد container با تنظیمات صحیح
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
             contentDiv.style.cssText = `
                 width: 100%;
-                height: 600px;
+                height: 100%;
                 background: white;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -21,8 +22,10 @@ const EpubManager = {
             `;
             bookContainer.appendChild(contentDiv);
             
+            // ایجاد کتاب با فایل صحیح
             currentBook = ePub(file);
             
+            // تنظیمات رندر بهینه
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
@@ -32,12 +35,7 @@ const EpubManager = {
             
             await currentRendition.display();
             
-            // ردیابی پیشرفت مطالعه
-            currentRendition.on('relocated', location => {
-                this.updateProgress(location.start / location.total * 100);
-                this.updatePageInfo(location.start, location.total);
-            });
-            
+            // تنظیمات استایل iframe با تأخیر بیشتر
             setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
@@ -52,13 +50,18 @@ const EpubManager = {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     if (iframeDoc && iframeDoc.body) {
                         iframeDoc.body.style.direction = 'rtl';
-                        iframeDoc.body.style.fontFamily = 'Vazirmatn, sans-serif';
+                        iframeDoc.body.style.fontFamily = 'Vazirmatn', sans-serif;
                         iframeDoc.body.style.lineHeight = '1.8';
                         iframeDoc.body.style.fontSize = '16px';
                         iframeDoc.body.style.color = '#1e293b';
+                        iframeDoc.body.style.padding = '20px';
+                        
+                        // پنهان کردن اسکرول‌بارهای اضافی
+                        iframeDoc.documentElement.style.overflow = 'hidden';
+                        iframeDoc.body.style.overflow = 'auto';
                     }
                 }
-            }, 500);
+            }, 1000);
             
             return currentRendition;
         } catch (e) {
@@ -70,7 +73,7 @@ const EpubManager = {
                     </div>
                     <h3>خطا در بارگذاری کتاب</h3>
                     <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
-                    <button class="retry-btn">
+                    <button class="retry-btn" onclick="location.reload()">
                         <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
                 </div>`;
@@ -122,6 +125,9 @@ const EpubManager = {
             // ایجاد SVG برای مایند مپ
             const width = 300;
             const height = 400;
+            
+            // پاک کردن محتوای قبلی
+            mindmapContent.innerHTML = '';
             
             const svg = d3.select("#mindmap-content")
                 .append("svg")
