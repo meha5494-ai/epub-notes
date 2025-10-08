@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveNoteBtn = document.getElementById('save-note');
     const noteText = document.getElementById('note-text');
     const addNoteBtn = document.getElementById('add-note-btn');
+    const loadingOverlay = document.getElementById('loading-overlay');
 
     let books = [];
 
@@ -75,9 +76,40 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
-        // تاخیر بیشتر برای اطمینان از نمایش کامل view
+        // تاخیر برای اطمینان از نمایش کامل view
         setTimeout(async () => {
-            await window.EpubManager.loadEpub(book.id, book.file, book.title);
+            try {
+                // نمایش لودینگ
+                loadingOverlay.style.display = 'flex';
+                
+                // بارگذاری کتاب
+                await window.EpubManager.loadEpub(book.id, book.file, book.title);
+                
+                // اطمینان از پنهان شدن لودینگ بعد از 5 ثانیه (حتی اگر کتاب بارگذاری نشود)
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error opening book:', error);
+                // پنهان کردن لودینگ در صورت خطا
+                loadingOverlay.style.display = 'none';
+                
+                // نمایش پیام خطا
+                const bookContainer = document.getElementById('book-container');
+                bookContainer.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>خطا در بارگذاری کتاب</h3>
+                        <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
+                        <button class="primary-btn" onclick="location.reload()">
+                            <i class="fas fa-redo"></i> تلاش مجدد
+                        </button>
+                    </div>
+                `;
+            }
         }, 500);
         
         window.NotesManager.clear();
