@@ -1,52 +1,281 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>کتابخانه من 📚</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png" type="image/png">
-  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>کتابخانه شخصی</title>
+
+  <!-- فونت وزیرمتن -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- استایل -->
+  <style>
+    :root {
+      --primary-color: #007aff;
+      --background-light: #f9f9f9;
+      --background-dark: #1c1c1e;
+      --text-light: #1c1c1e;
+      --text-dark: #f9f9f9;
+      --card-light: #ffffff;
+      --card-dark: #2c2c2e;
+      --border-light: #e5e5ea;
+      --border-dark: #3a3a3c;
+    }
+
+    [data-theme="dark"] {
+      --background: var(--background-dark);
+      --text: var(--text-dark);
+      --card: var(--card-dark);
+      --border: var(--border-dark);
+    }
+
+    [data-theme="light"] {
+      --background: var(--background-light);
+      --text: var(--text-light);
+      --card: var(--card-light);
+      --border: var(--border-light);
+    }
+
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      font-size: 1.3rem;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .theme-toggle {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .container {
+      padding: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .upload-btn {
+      display: block;
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 16px;
+    }
+
+    .book-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+
+    .book-card:hover {
+      transform: scale(1.03);
+    }
+
+    .book-cover {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #ccc;
+    }
+
+    .book-title {
+      padding: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #reader-section {
+      display: none;
+      height: 80vh;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card);
+      margin-top: 16px;
+    }
+
+    .reader-controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      .book-title { font-size: 0.8rem; }
+      .upload-btn { font-size: 0.9rem; }
+      header h1 { font-size: 1.1rem; }
+    }
+  </style>
 </head>
-<body>
-  <div class="app-container">
-    <header class="app-header glass">
-      <h1>کتابخانه من</h1>
-      <div class="header-actions">
-        <button id="theme-toggle" title="تغییر تم">🌙</button>
-        <button id="install-btn">⬇️ نصب</button>
-      </div>
-    </header>
+<body data-theme="light">
+  <header>
+    <h1>📚 کتابخانه شخصی</h1>
+    <button class="theme-toggle" id="theme-btn">تم تیره</button>
+  </header>
 
-    <section class="upload-section">
-      <input type="file" id="book-upload" accept=".epub" hidden>
-      <button id="upload-btn">📤 افزودن کتاب</button>
-    </section>
+  <div class="container">
+    <input type="file" id="book-upload" accept=".epub" hidden />
+    <button class="upload-btn" id="upload-btn">افزودن کتاب جدید</button>
 
-    <section class="book-list">
-      <h2>📚 کتاب‌های من</h2>
-      <div id="books-container" class="book-grid"></div>
-    </section>
+    <div class="book-grid" id="book-grid"></div>
 
-    <section id="reader-section" class="hidden">
-      <div class="reader-controls glass">
-        <button id="back-btn">🔙</button>
-        <button id="add-note-btn">📝</button>
-      </div>
+    <section id="reader-section">
       <div id="viewer"></div>
-    </section>
-
-    <section id="notes-panel" class="hidden">
-      <h3>یادداشت‌های من</h3>
-      <div id="notes-container"></div>
+      <div class="reader-controls">
+        <button class="upload-btn" id="back-btn">بازگشت</button>
+      </div>
     </section>
   </div>
 
   <script src="libs/epub.min.js"></script>
   <script src="libs/idb-keyval.min.js"></script>
-  <script src="js/epub-manager.js"></script>
-  <script src="js/notes-manager.js"></script>
-  <script src="js/main.js"></script>
+
+  <script>
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('book-upload');
+    const bookGrid = document.getElementById('book-grid');
+    const readerSection = document.getElementById('reader-section');
+    const viewer = document.getElementById('viewer');
+    const backBtn = document.getElementById('back-btn');
+    const themeBtn = document.getElementById('theme-btn');
+
+    let books = JSON.parse(localStorage.getItem('books') || '[]');
+
+    // 🌗 تم
+    themeBtn.addEventListener('click', () => {
+      const theme = document.body.getAttribute('data-theme');
+      const newTheme = theme === 'light' ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', newTheme);
+      themeBtn.textContent = newTheme === 'light' ? 'تم تیره' : 'تم روشن';
+    });
+
+    // 📤 آپلود کتاب
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const arrayBuffer = await file.arrayBuffer();
+      const book = ePub(arrayBuffer);
+      const metadata = await book.loaded.metadata;
+      const coverUrl = await book.coverUrl();
+
+      const newBook = {
+        id: Date.now(),
+        name: metadata.title || file.name,
+        cover: coverUrl,
+        data: arrayBufferToBase64(arrayBuffer)
+      };
+
+      books.push(newBook);
+      localStorage.setItem('books', JSON.stringify(books));
+      renderBooks();
+    });
+
+    // 📚 نمایش گرید کتاب‌ها
+    function renderBooks() {
+      if (books.length === 0) {
+        bookGrid.innerHTML = '<p style="text-align:center;color:gray;">کتابی اضافه نشده است</p>';
+        return;
+      }
+      bookGrid.innerHTML = books.map(b => `
+        <div class="book-card" onclick="openBook(${b.id})">
+          <img class="book-cover" src="${b.cover || 'icons/icon-192.png'}" alt="cover">
+          <div class="book-title">${b.name}</div>
+        </div>
+      `).join('');
+    }
+
+    // 📖 باز کردن کتاب
+    window.openBook = async (id) => {
+      const bookData = books.find(b => b.id === id);
+      if (!bookData) return alert("کتاب پیدا نشد!");
+
+      bookGrid.classList.add('hidden');
+      uploadBtn.classList.add('hidden');
+      readerSection.style.display = 'block';
+
+      const book = ePub(base64ToArrayBuffer(bookData.data));
+      const rendition = book.renderTo(viewer, {
+        width: "100%",
+        height: "100%"
+      });
+      rendition.display();
+    };
+
+    // 🔙 بازگشت
+    backBtn.addEventListener('click', () => {
+      readerSection.style.display = 'none';
+      bookGrid.classList.remove('hidden');
+      uploadBtn.classList.remove('hidden');
+    });
+
+    // 🧠 Helper: تبدیل ArrayBuffer <-> Base64
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+      return window.btoa(binary);
+    }
+
+    function base64ToArrayBuffer(base64) {
+      const binary_string = window.atob(base64);
+      const len = binary_string.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = binary_string.charCodeAt(i);
+      return bytes.buffer;
+    }
+
+    renderBooks();
+  </script>
 </body>
 </html>
