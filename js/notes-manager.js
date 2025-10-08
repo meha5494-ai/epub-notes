@@ -1,38 +1,76 @@
 class NotesManager {
   constructor() {
     this.notes = [];
+    this.panel = document.getElementById("notes-panel");
+    this.container = document.getElementById("notes-container");
+    this.currentBookId = null;
+    console.log("📝 NotesManager آماده است");
+    this.init();
   }
 
-  async loadNotes() {
-    const keys = await idbKeyval.keys();
+  async init() {
+    await this.loadNotes();
+  }
+
+  async loadNotes(bookId = null) {
     this.notes = [];
+    const keys = await idbKeyval.keys();
     for (const key of keys) {
       if (key.startsWith("note_")) {
-        this.notes.push(await idbKeyval.get(key));
+        const note = await idbKeyval.get(key);
+        if (!bookId || note.bookId === bookId) {
+          this.notes.push(note);
+        }
       }
     }
     this.renderNotes();
   }
 
-  async addNote(bookId, cfiRange, text, note) {
-    const id = `note_${Date.now()}`;
-    const newNote = { id, bookId, cfiRange, text, note, date: new Date().toLocaleString("fa-IR") };
-    await idbKeyval.set(id, newNote);
+  async addNote(bookId, cfiRange, text, noteContent) {
+    const noteId = `note_${Date.now()}`;
+    const newNote = {
+      id: noteId,
+      bookId,
+      cfiRange,
+      text,
+      note: noteContent,
+      createdAt: new Date().toISOString()
+    };
+
+    await idbKeyval.set(noteId, newNote);
     this.notes.push(newNote);
     this.renderNotes();
-    window.epubManager.highlightText(cfiRange);
+
+    // هایلایت متن در کتاب
+    if (window.epubManager) {
+      window.epubManager.highlightText(cfiRange);
+    }
   }
 
   renderNotes() {
-    const container = document.getElementById("notes-container");
-    if (!container) return;
-    container.innerHTML = this.notes.map(n => `
+    if (!this.container) return;
+    if (this.notes.length === 0) {
+      this.container.innerHTML = `<p style="text-align:center; color:gray;">یادداشتی وجود ندارد</p>`;
+      return;
+    }
+
+    this.container.innerHTML = this.notes.map(note => `
       <div class="note-item">
-        <b>${n.text}</b><br>
-        <small>${n.note || "بدون توضیح"} | ${n.date}</small>
+        <div class="note-text">📘 ${note.text}</div>
+        <div class="note-meta">${note.note}</div>
+        <small>${new Date(note.createdAt).toLocaleDateString('fa-IR')}</small>
       </div>
-    `).join("") || "<p>یادداشتی ثبت نشده است.</p>";
+    `).join("");
   }
 }
 
 window.notesManager = new NotesManager();
+
+// مدیریت رویداد انتخاب متن برای افزودن یادداشت
+window.addEventListener("text-selected", async (e) => {
+  const { cfiRange, text } = e.detail;
+  const note = prompt("یادداشت خود را بنویس:");
+  if (note && window.epubManager?.currentBookId) {
+    await window.notesManager.addNote(window.epubManager.currentBookId, cfiRange, text, note);
+  }
+});
