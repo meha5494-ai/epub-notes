@@ -16,7 +16,9 @@ const EpubManager = {
             contentDiv.style.height = '600px';
             bookContainer.appendChild(contentDiv);
             
-            currentBook = ePub(file);
+            // ✅ تبدیل فایل به URL برای epub.js
+            const fileUrl = URL.createObjectURL(file);
+            currentBook = ePub(fileUrl);
             
             // رندر کتاب با ساده‌ترین تنظیمات ممکن
             currentRendition = currentBook.renderTo(contentDiv, {
@@ -27,15 +29,22 @@ const EpubManager = {
             
             // نمایش کتاب
             await currentRendition.display();
+
+            // آزاد کردن blob URL برای جلوگیری از memory leak
+            URL.revokeObjectURL(fileUrl);
             
-            // پنهان کردن لودینگ
+            // پنهان کردن لودینگ با تاخیر کوتاه
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
-            }, 1000);
+            }, 800);
             
             return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB:', e);
+
+            // ✅ اگر خطا رخ داد، لودینگ را حتماً پنهان کن
+            loadingOverlay.style.display = 'none';
+
             loadingOverlay.innerHTML = `
                 <div class="loading-card">
                     <div class="error-icon">
@@ -52,7 +61,10 @@ const EpubManager = {
     },
 
     extractBookMetadata: async (file) => {
-        const book = ePub(file);
+        // ✅ از URL برای متادیتا استفاده کن
+        const fileUrl = URL.createObjectURL(file);
+        const book = ePub(fileUrl);
+
         const bookId = file.name + file.size + file.lastModified;
         await book.opened;
         let coverData = null;
@@ -61,6 +73,10 @@ const EpubManager = {
         } catch (e) {
             console.warn('no cover', e);
         }
+
+        // آزاد کردن blob URL
+        URL.revokeObjectURL(fileUrl);
+
         return {
             id: bookId,
             title: file.name.replace('.epub', ''),
@@ -71,4 +87,5 @@ const EpubManager = {
     }
 };
 
+// ✅ در دسترس قرار دادن برای سایر فایل‌ها
 window.EpubManager = EpubManager;
