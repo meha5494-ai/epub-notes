@@ -67,7 +67,14 @@ const EpubManager = {
             currentRendition.on('relocated', (location) => {
                 this.updateProgress(location.start / location.total * 100);
                 this.updatePageInfo(location.start, location.total);
+                this.saveReadingPosition(id, location.start);
             });
+            
+            // بازیابی آخرین موقعیت خواندن
+            const lastPosition = this.getReadingPosition(id);
+            if (lastPosition) {
+                await currentRendition.display(lastPosition);
+            }
             
             return currentRendition;
         } catch (e) {
@@ -93,7 +100,7 @@ const EpubManager = {
         if (progressFill) {
             progressFill.style.width = `${percent}%`;
             // افزودن انیمیشن به نوار پیشرفت
-            progressFill.style.transition = 'width 0.3s ease';
+            progressFill.style.transition = 'width 0.5s ease';
         }
         if (progressText) {
             progressText.textContent = `${Math.round(percent)}%`;
@@ -200,6 +207,23 @@ const EpubManager = {
         if (currentRendition) {
             currentRendition.flow(mode === 'paged' ? 'paginated' : 'scrolled-doc');
         }
+    },
+
+    saveReadingPosition: (bookId, position) => {
+        const positions = JSON.parse(localStorage.getItem('readingPositions') || '{}');
+        positions[bookId] = position;
+        localStorage.setItem('readingPositions', JSON.stringify(positions));
+    },
+
+    getReadingPosition: (bookId) => {
+        const positions = JSON.parse(localStorage.getItem('readingPositions') || '{}');
+        return positions[bookId] || null;
+    },
+
+    clearReadingPosition: (bookId) => {
+        const positions = JSON.parse(localStorage.getItem('readingPositions') || '{}');
+        delete positions[bookId];
+        localStorage.setItem('readingPositions', JSON.stringify(positions));
     },
 
     extractBookMetadata: async (file) => {
