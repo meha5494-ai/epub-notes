@@ -330,7 +330,7 @@ body.sepia {
     color: var(--text);
 }
 
-/* دکمه حذف با ظاهر بهتر */
+/* دکمه حذف همیشه قابل مشاهده */
 .delete-book-btn {
     position: absolute;
     top: 10px;
@@ -346,13 +346,8 @@ body.sepia {
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    opacity: 0;
     z-index: 10;
     box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
-}
-
-.book-card:hover .delete-book-btn {
-    opacity: 1;
 }
 
 .delete-book-btn:hover {
@@ -1052,12 +1047,5 @@ body.sepia {
     
     .mindmap-panel {
         width: 100%;
-    }
-    
-    .delete-book-btn {
-        width: 32px;
-        height: 32px;
-        top: 8px;
-        right: 8px;
     }
 }
