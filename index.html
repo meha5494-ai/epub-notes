@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <!-- کتابخانه‌ها -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -15,81 +15,89 @@
 </head>
 <body>
 <div id="library-view" class="view active">
-    <header class="header">
-        <h1>کتاب‌های من</h1>
-        <div class="actions">
-            <button class="mdc-icon-button" id="theme-toggle">
-                <span class="material-icons">dark_mode</span>
-            </button>
-            <button class="mdc-button mdc-button--raised" id="upload-button">
-                <span class="material-icons">add</span>
-                افزودن کتاب
-            </button>
-            <input type="file" id="epub-file-input" accept=".epub" style="display:none">
+    <div class="app-header">
+        <div class="header-content">
+            <h1><i class="fas fa-book-open"></i> کتابخانه من</h1>
+            <div class="header-actions">
+                <button class="icon-btn" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="primary-btn" id="upload-button">
+                    <i class="fas fa-plus"></i> افزودن کتاب
+                </button>
+                <input type="file" id="epub-file-input" accept=".epub" style="display:none">
+            </div>
         </div>
-    </header>
-    <div id="book-grid">
-        <div class="empty-state">
-            <span class="material-icons empty-icon">auto_stories</span>
-            <p>کتابخانه شما خالی است</p>
-            <button class="mdc-button mdc-button--outlined" onclick="document.getElementById('upload-button').click()">
-                افزودن کتاب
-            </button>
+    </div>
+    
+    <div class="container">
+        <div id="book-grid">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3>کتابخانه شما خالی است</h3>
+                <p>برای شروع، یک کتاب EPUB اضافه کنید</p>
+                <button class="secondary-btn" onclick="document.getElementById('upload-button').click()">
+                    <i class="fas fa-upload"></i> افزودن کتاب
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="reader-view" class="view">
-    <header class="header">
-        <button class="mdc-icon-button" id="back-button">
-            <span class="material-icons">arrow_forward</span>
+    <div class="reader-header">
+        <button class="back-btn" id="back-button">
+            <i class="fas fa-arrow-right"></i>
         </button>
-        <h2 id="reader-title">عنوان کتاب</h2>
-        <button class="mdc-icon-button" id="toggle-notes">
-            <span class="material-icons">note</span>
+        <div class="book-title-container">
+            <h2 id="reader-title">عنوان کتاب</h2>
+        </div>
+        <button class="icon-btn" id="toggle-notes">
+            <i class="fas fa-sticky-note"></i>
         </button>
-    </header>
-    <div id="book-container"></div>
-    <div id="loading-overlay">
-        <div class="loading-content">
-            <div class="mdc-linear-progress">
-                <div class="mdc-linear-progress__buffering-dots"></div>
-                <div class="mdc-linear-progress__buffer"></div>
-                <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-                    <span class="mdc-linear-progress__bar-inner"></span>
-                </div>
-                <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-                    <span class="mdc-linear-progress__bar-inner"></span>
-                </div>
+    </div>
+    
+    <div class="reader-container">
+        <div id="book-container"></div>
+        <div id="loading-overlay">
+            <div class="loading-card">
+                <div class="spinner"></div>
+                <p>در حال بارگذاری کتاب...</p>
             </div>
-            <p>در حال بارگذاری کتاب...</p>
         </div>
     </div>
 </div>
 
-<div id="notes-sheet" class="mdc-bottom-sheet">
+<div id="notes-sheet" class="bottom-sheet">
+    <div class="sheet-handle"></div>
     <div class="sheet-header">
-        <h3>یادداشت‌ها</h3>
-        <button class="mdc-icon-button" id="close-notes">
-            <span class="material-icons">close</span>
+        <h3><i class="fas fa-sticky-note"></i> یادداشت‌ها</h3>
+        <button class="close-btn" id="close-notes">
+            <i class="fas fa-times"></i>
         </button>
     </div>
-    <div id="notes-list"></div>
-    <div id="no-notes-message">
-        <span class="material-icons">note_alt</span>
-        <p>هنوز هیچ یادداشتی ثبت نشده است.</p>
+    <div class="sheet-content">
+        <div id="notes-list"></div>
+        <div id="no-notes-message" class="empty-notes">
+            <i class="fas fa-clipboard"></i>
+            <p>هنوز هیچ یادداشتی ثبت نشده است</p>
+        </div>
     </div>
-    <button class="mdc-fab" id="add-note-btn">
-        <span class="material-icons">add</span>
+    <button class="fab-btn" id="add-note-btn">
+        <i class="fas fa-plus"></i>
     </button>
 </div>
 
-<div id="add-note-popover" class="mdc-card">
-    <h4>افزودن یادداشت جدید</h4>
-    <textarea id="note-text" placeholder="متن یادداشت..."></textarea>
+<div id="add-note-popover" class="note-popover">
+    <div class="popover-header">
+        <h3>افزودن یادداشت جدید</h3>
+    </div>
+    <textarea id="note-text" placeholder="متن یادداشت خود را اینجا بنویسید..."></textarea>
     <div class="popover-actions">
-        <button class="mdc-button" id="cancel-note">لغو</button>
-        <button class="mdc-button mdc-button--raised" id="save-note">ذخیره</button>
+        <button class="cancel-btn" id="cancel-note">لغو</button>
+        <button class="save-btn" id="save-note">ذخیره</button>
     </div>
 </div>
 
