@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // اضافه کردن رویداد به دکمه مایند مپ
     if (mindmapBtn) {
         mindmapBtn.addEventListener('click', function() {
+            console.log('Mindmap button clicked');
             window.EpubManager.showMindmap();
             document.getElementById('mindmap-panel').classList.add('visible');
         });
