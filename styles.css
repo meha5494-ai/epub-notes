@@ -296,6 +296,9 @@ body.dark {
     padding: 20px;
     max-width: 900px;
     margin: 0 auto;
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
 }
 
 #book-container {
@@ -303,15 +306,24 @@ body.dark {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 30px;
-    min-height: 70vh;
+    flex: 1;
+    overflow: auto;
     line-height: 1.8;
     font-size: 1.1rem;
     color: var(--text);
+    min-height: 400px;
 }
 
 #book-container > div {
     max-width: 100%;
     margin: 0 auto;
+}
+
+#book-container iframe {
+    border: none;
+    width: 100%;
+    min-height: 500px;
+    background: var(--surface);
 }
 
 /* Loading Overlay */
@@ -358,6 +370,31 @@ body.dark {
 .loading-card p {
     color: var(--text-light);
     font-weight: 500;
+}
+
+.error-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(236, 72, 153, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: var(--accent);
+    font-size: 1.5rem;
+}
+
+.loading-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.loading-card p {
+    margin-bottom: 16px;
+    text-align: center;
+    color: var(--text-light);
 }
 
 /* Notes Sheet */
