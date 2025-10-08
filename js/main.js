@@ -1,10 +1,23 @@
-// main.js
-import { notesManagerInstance } from './notesManager.js';
+// js/main.js
+import { notesManagerInstance } from './notes-manager.js';
+import { EPUBManager } from './epub-manager.js';
 
-// افزودن یک یادداشت نمونه
+// نمونه از EPUBManager
+const epubManager = new EPUBManager('book-container');
+
+// انتخاب فایل EPUB و بارگذاری
+const fileInput = document.getElementById('epub-file-input');
+fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        await epubManager.loadBook(file);
+    }
+});
+
+// افزودن یادداشت نمونه
 notesManagerInstance.addNote("اولین یادداشت");
 
-// Listener برای پیام‌های async (مثلاً از extension یا دیگر اسکریپت‌ها)
+// Listener برای پیام‌های async (مثلاً از Extension)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || !message.action) {
         sendResponse({ success: false, error: "Invalid message" });
@@ -14,8 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.action) {
         case "getNotes":
             (async () => {
-                const notes = notesManagerInstance.getNotes();
-                sendResponse({ success: true, notes });
+                sendResponse({ success: true, notes: notesManagerInstance.getNotes() });
             })();
             return true;
 
