@@ -1,14 +1,21 @@
 const bookContainer = document.getElementById('book-container');
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
+const pageInfo = document.getElementById('page-info');
 
 let currentBook = null;
 let currentRendition = null;
-let currentPage = 0;
+let currentLocation = null;
 let totalPages = 0;
-let isPaginatedView = false;
+let currentPage = 0;
+let readingProgress = 0;
 
 const EpubManager = {
     loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
+        progressFill.style.width = '0%';
+        progressText.textContent = '0%';
+        pageInfo.textContent = 'صفحه 1 از 1';
         
         try {
             // ایجاد یک div با ID مشخص برای محتوای کتاب
@@ -33,29 +40,28 @@ const EpubManager = {
             // دریافت تعداد صفحات
             const spine = currentBook.spine;
             totalPages = spine.length;
-            console.log(`Total pages: ${totalPages}`);
             
-            // رندر کتاب با تنظیمات پیش‌فرض
-            currentRendition = currentBook.renderTo(contentDiv, {
+            // رندر کتاب با تنظیمات بهینه
+            currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
-                flow: isPaginatedView ? "paginated" : "scrolled-doc",
+                flow: "scrolled-doc",
                 manager: "default"
             });
             
-            // رویداد برای به‌روزرسانی اطلاعات صفحه
+            // رویداد برای به‌روزرسانی پیشرفت
             currentRendition.on('relocated', (location) => {
-                console.log('Relocated to:', location);
-                updatePageInfo();
+                currentLocation = location;
                 updateProgress();
+                updatePageInfo();
             });
             
             // نمایش کتاب
             await currentRendition.display();
             
-            // به‌روزرسانی اطلاعات صفحه و پیشرفت
-            updatePageInfo();
+            // به‌روزرسانی اطلاعات صفحه
             updateProgress();
+            updatePageInfo();
             
             return currentRendition;
         } catch (e) {
@@ -106,13 +112,36 @@ const EpubManager = {
         }
     },
 
+    // تابع برای به‌روزرسانی پیشرفت
+    updateProgress: function() {
+        if (currentBook && currentLocation) {
+            // محاسبه درصد پیشرفت
+            const percentage = Math.round((currentLocation.end.percentage || 0) * 100);
+            readingProgress = percentage;
+            progressFill.style.width = percentage + '%';
+            progressText.textContent = percentage + '%';
+        }
+    },
+
+    // تابع برای به‌روزرسانی اطلاعات صفحه
+    updatePageInfo: function() {
+        if (currentRendition) {
+            currentRendition.location().then(location => {
+                const current = location.start.displayed.page;
+                const total = location.start.displayed.total;
+                pageInfo.textContent = `صفحه ${current} از ${total}`;
+            }).catch(e => {
+                console.error('Error getting page info:', e);
+                pageInfo.textContent = 'صفحه 1 از 1';
+            });
+        }
+    },
+
     // تابع برای رفتن به صفحه بعد
     next: function() {
         if (currentRendition) {
             currentRendition.next().then(() => {
                 console.log('Moved to next page');
-                updatePageInfo();
-                updateProgress();
             }).catch(e => {
                 console.error('Error going to next page:', e);
             });
@@ -124,8 +153,6 @@ const EpubManager = {
         if (currentRendition) {
             currentRendition.prev().then(() => {
                 console.log('Moved to previous page');
-                updatePageInfo();
-                updateProgress();
             }).catch(e => {
                 console.error('Error going to previous page:', e);
             });
@@ -133,86 +160,15 @@ const EpubManager = {
     },
 
     // تابع برای تغییر حالت نمایش
-    toggleViewMode: function() {
-        if (!currentRendition) return;
-        
-        isPaginatedView = !isPaginatedView;
-        
-        // دریافت تنظیمات فعلی
-        const currentLocation = currentRendition.currentLocation();
-        
-        // رندر مجدد با حالت جدید
-        currentRendition.destroy();
-        
-        const contentDiv = document.getElementById('epub-content');
-        currentRendition = currentBook.renderTo(contentDiv, {
-            width: "100%",
-            height: "100%",
-            flow: isPaginatedView ? "paginated" : "scrolled-doc",
-            manager: "default"
-        });
-        
-        // نمایش کتاب در محل قبلی
-        currentRendition.display(currentLocation).then(() => {
-            updatePageInfo();
-            updateProgress();
-            
-            // به‌روزرسانی دکمه تغییر حالت
-            const viewToggleBtn = document.getElementById('view-toggle-btn');
-            if (viewToggleBtn) {
-                if (isPaginatedView) {
-                    viewToggleBtn.innerHTML = '<i class="fas fa-file-alt"></i>';
-                    viewToggleBtn.title = 'نمای پیوسته';
-                } else {
-                    viewToggleBtn.innerHTML = '<i class="fas fa-columns"></i>';
-                    viewToggleBtn.title = 'نمای صفحه‌ای';
-                }
+    setViewMode: function(mode) {
+        if (currentRendition) {
+            if (mode === 'continuous') {
+                currentRendition.settings.flow = 'scrolled-doc';
+            } else if (mode === 'paged') {
+                currentRendition.settings.flow = 'paginated';
             }
-        });
-    },
-
-    // تابع برای دریافت فهرست مطالب
-    getOutline: async function() {
-        if (!currentBook) return [];
-        
-        try {
-            const nav = await currentBook.loaded.navigation;
-            const outline = [];
-            
-            // دریافت فصل‌ها
-            const toc = await nav.toc();
-            
-            function processTocItem(item, level = 0) {
-                if (item.label) {
-                    outline.push({
-                        label: item.label,
-                        level: level,
-                        href: item.href
-                    });
-                }
-                
-                if (item.subitems) {
-                    item.subitems.forEach(subitem => processTocItem(subitem, level + 1));
-                }
-            }
-            
-            if (toc) {
-                processTocItem(toc);
-            }
-            
-            return outline;
-        } catch (e) {
-            console.error('Error getting outline:', e);
-            return [];
-        }
-    },
-
-    // تابع برای رفتن به یک بخش خاص
-    goToSection: function(href) {
-        if (currentRendition && href) {
-            currentRendition.rended.then(() => {
-                currentRendition.display(href);
-            });
+            currentRendition.clear();
+            currentRendition.display();
         }
     },
 
@@ -235,40 +191,5 @@ const EpubManager = {
         };
     }
 };
-
-// توابع کمکی برای به‌روزرسانی UI
-function updatePageInfo() {
-    const pageInfo = document.getElementById('page-info');
-    const progressText = document.getElementById('progress-text');
-    
-    if (pageInfo && currentRendition) {
-        currentRendition.location().then(location => {
-            const current = location.start.displayed.page;
-            const total = location.start.displayed.total;
-            pageInfo.textContent = `صفحه ${current} از ${total}`;
-            progressText.textContent = `صفحه ${current} از ${total}`;
-        }).catch(e => {
-            console.error('Error getting page info:', e);
-            pageInfo.textContent = 'صفحه 1 از 1';
-            progressText.textContent = 'صفحه 1 از 1';
-        });
-    }
-}
-
-function updateProgress() {
-    const progressFill = document.getElementById('progress-fill');
-    
-    if (progressFill && currentRendition) {
-        currentRendition.location().then(location => {
-            const current = location.start.displayed.page;
-            const total = location.start.displayed.total;
-            const percentage = total > 0 ? (current / total) * 100 : 0;
-            progressFill.style.width = `${percentage}%`;
-        }).catch(e => {
-            console.error('Error updating progress:', e);
-            progressFill.style.width = '0%';
-        });
-    }
-}
 
 window.EpubManager = EpubManager;
