@@ -18,17 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let books = [];
 
-    // بررسی و اضافه کردن رویداد به دکمه بازگشت
-    console.log('Back button element:', backBtn);
+    // اضافه کردن رویداد به دکمه بازگشت - روش مستقیم
     if (backBtn) {
         backBtn.addEventListener('click', function() {
             console.log('Back button clicked');
             readerView.classList.remove('active');
             libraryView.classList.add('active');
         });
-        console.log('Back button event listener added');
+        console.log('Back button event listener added successfully');
     } else {
-        console.error('Back button not found in DOM');
+        console.error('Back button element not found');
     }
 
     uploadBtn.addEventListener('click', () => fileInput.click());
@@ -93,32 +92,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // نمایش لودینگ
         loadingOverlay.style.display = 'flex';
         
-        // تاخیر کوتاه قبل از بارگذاری کتاب
-        setTimeout(async () => {
-            try {
-                console.log('Loading book...');
-                await window.EpubManager.loadEpub(book.id, book.file, book.title);
-                console.log('Book loaded successfully');
-            } catch (error) {
-                console.error('Error opening book:', error);
-                loadingOverlay.style.display = 'none';
-                
-                // نمایش پیام خطا
-                const bookContainer = document.getElementById('book-container');
-                bookContainer.innerHTML = `
-                    <div class="error-container">
-                        <div class="error-icon">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <h3>خطا در بارگذاری کتاب</h3>
-                        <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
-                        <button class="primary-btn" onclick="location.reload()">
-                            <i class="fas fa-redo"></i> تلاش مجدد
-                        </button>
+        // بارگذاری کتاب بدون تاخیر اضافی
+        try {
+            console.log('Loading book...');
+            await window.EpubManager.loadEpub(book.id, book.file, book.title);
+            console.log('Book loaded successfully');
+        } catch (error) {
+            console.error('Error opening book:', error);
+            loadingOverlay.style.display = 'none';
+            
+            // نمایش پیام خطا
+            const bookContainer = document.getElementById('book-container');
+            bookContainer.innerHTML = `
+                <div class="error-container">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                `;
-            }
-        }, 300);
+                    <h3>خطا در بارگذاری کتاب</h3>
+                    <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
+                    <button class="primary-btn" onclick="location.reload()">
+                        <i class="fas fa-redo"></i> تلاش مجدد
+                    </button>
+                </div>
+            `;
+        }
         
         window.NotesManager.clear();
         renderNotes();
