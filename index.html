@@ -59,26 +59,29 @@
         </button>
     </div>
     
-    <div class="reader-container">
-        <div id="book-container"></div>
+    <!-- نوار پیشرفت -->
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">0%</div>
     </div>
     
-    <!-- نوار پیشرفت و کنترل‌ها -->
-    <div class="reading-controls">
-        <div class="progress-info">
-            <span id="progress-text">صفحه 1 از 1</span>
-            <div class="progress-bar">
-                <div id="progress-fill" style="width: 0%"></div>
-            </div>
-        </div>
-        <div class="control-buttons">
-            <button class="control-btn" id="view-toggle-btn" title="تغییر نما">
-                <i class="fas fa-file-alt"></i>
-            </button>
-            <button class="control-btn" id="outline-btn" title="فهرست مطالب">
-                <i class="fas fa-list"></i>
-            </button>
-        </div>
+    <!-- دکمه‌های نمایش -->
+    <div class="view-controls">
+        <button class="view-btn" id="continuous-view-btn" title="نمایش پیوسته">
+            <i class="fas fa-align-justify"></i>
+        </button>
+        <button class="view-btn" id="paged-view-btn" title="نمایش صفحه به صفحه">
+            <i class="fas fa-file"></i>
+        </button>
+        <button class="view-btn" id="mindmap-btn" title="نمایش مایند مپ">
+            <i class="fas fa-project-diagram"></i>
+        </button>
+    </div>
+    
+    <div class="reader-container">
+        <div id="book-container"></div>
     </div>
     
     <!-- دکمه‌های ناوبری صفحات -->
@@ -90,24 +93,6 @@
         <button class="page-nav-btn" id="next-page-btn">
             <i class="fas fa-chevron-left"></i>
         </button>
-    </div>
-</div>
-
-<!-- پنل فهرست مطالب -->
-<div id="outline-panel" class="outline-panel">
-    <div class="panel-header">
-        <h3><i class="fas fa-list"></i> فهرست مطالب</h3>
-        <button class="close-btn" id="close-outline">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="panel-content">
-        <div id="outline-list">
-            <div class="loading-outline">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>در حال بارگذاری فهرست مطالب...</p>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -139,6 +124,23 @@
     <div class="popover-actions">
         <button class="cancel-btn" id="cancel-note">لغو</button>
         <button class="save-btn" id="save-note">ذخیره</button>
+    </div>
+</div>
+
+<!-- پنل مایند مپ -->
+<div id="mindmap-panel" class="mindmap-panel">
+    <div class="panel-header">
+        <h3><i class="fas fa-project-diagram"></i> مایند مپ کتاب</h3>
+        <button class="close-btn" id="close-mindmap">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="mindmap-content">
+        <div class="mindmap-placeholder">
+            <i class="fas fa-project-diagram"></i>
+            <p>مایند مپ کتاب در اینجا نمایش داده می‌شود</p>
+            <p>این قابلیت در حال توسعه است</p>
+        </div>
     </div>
 </div>
 
