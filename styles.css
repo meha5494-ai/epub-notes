@@ -1,113 +1,135 @@
 :root {
-  --primary-color: #3b82f6;
-  --background: #f9fafb;
-  --text: #111827;
-  --border: #e5e7eb;
-  --highlight: #fde68a;
+  --primary: #4a6fa5;
+  --secondary: #6c757d;
+  --bg: #f8f9fa;
+  --text: #212529;
+  --card: #fff;
+  --border: #dee2e6;
+}
+
+body.dark {
+  --primary: #70a1ff;
+  --secondary: #a4b0be;
+  --bg: #1e272e;
+  --text: #f1f2f6;
+  --card: #2f3640;
+  --border: #353b48;
 }
 
 body {
-  font-family: 'Vazirmatn', sans-serif;
-  background: var(--background);
-  color: var(--text);
+  font-family: 'Sahel', sans-serif;
   margin: 0;
-  direction: rtl;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
 }
 
-header {
-  background: var(--primary-color);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 0 0 16px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-h1 { font-size: 1.2rem; margin: 0; }
-
-button {
-  background: white;
-  color: var(--primary-color);
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover { background: #e0e7ff; }
-
-/* 📚 لیست کتاب‌ها */
-#book-list-section {
+.app-container {
+  max-width: 1000px;
+  margin: 0 auto;
   padding: 15px;
 }
 
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+}
+
+button:hover {
+  background: #3a5a8a;
+  transform: scale(1.05);
+}
+
 .book-item {
-  background: white;
-  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 10px;
+  padding: 10px 15px;
   margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   cursor: pointer;
 }
 
-/* 📖 نمایش EPUB */
+.book-item:hover {
+  transform: translateY(-2px);
+}
+
 #viewer {
-  width: 100%;
-  height: 75vh;
-  background: white;
-  overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  height: 70vh;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
 }
 
-/* 📝 دکمه افزودن یادداشت (FAB) */
-.fab {
-  position: fixed;
-  bottom: 80px;
-  left: 20px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  font-size: 1.4rem;
-  background: var(--primary-color);
-  color: white;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+.reader-controls {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
 }
 
-/* 🗒️ یادداشت‌ها */
 #notes-panel {
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 100%;
-  max-height: 70%;
-  background: white;
+  left: 0;
+  background: var(--card);
   border-top: 2px solid var(--border);
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
-  border-radius: 16px 16px 0 0;
+  border-radius: 15px 15px 0 0;
   padding: 15px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+  max-height: 50vh;
   overflow-y: auto;
-  animation: slide-up 0.3s ease-out;
+  transition: transform 0.3s ease-in-out;
 }
 
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+.hidden {
+  display: none !important;
 }
 
 .note-item {
-  background: var(--highlight);
-  border-radius: 10px;
+  background: rgba(74,111,165,0.1);
   padding: 10px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 0.9em;
 }
 
-.hidden { display: none !important; }
+@media (max-width: 600px) {
+  .app-container {
+    padding: 10px;
+  }
 
-/* 📱 ریسپانسیو */
-@media (min-width: 600px) {
-  .fab { left: 40px; bottom: 40px; }
-  #notes-panel { width: 400px; right: 10px; bottom: 10px; border-radius: 12px; max-height: 80%; }
+  button {
+    font-size: 0.85rem;
+    padding: 7px 10px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+  }
 }
