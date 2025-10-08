@@ -32,13 +32,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (backBtn) {
         backBtn.addEventListener('click', function() {
             // ذخیره موقعیت فعلی کتاب
-            if (window.currentBookId) {
-                const rendition = window.EpubManager.currentRendition;
-                if (rendition) {
-                    rendition.location().then(loc => {
-                        window.EpubManager.saveReadingPosition(window.currentBookId, loc.start);
-                    });
-                }
+            if (window.currentBookId && window.EpubManager.currentRendition) {
+                window.EpubManager.currentRendition.location().then(loc => {
+                    window.EpubManager.saveReadingPosition(window.currentBookId, loc.start);
+                });
             }
             
             readerView.classList.remove('active');
