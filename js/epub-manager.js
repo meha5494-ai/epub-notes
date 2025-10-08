@@ -8,24 +8,41 @@ const EpubManager = {
     loadEpub: async (id, file, title) => {
         loadingOverlay.style.display = 'flex';
         bookContainer.innerHTML = '';
+        
         try {
             currentBook = ePub(file);
+            
+            // اطمینان از اینکه کتاب به درستی باز شده
+            await currentBook.ready;
+            
             currentRendition = currentBook.renderTo('book-container', {
                 width: '100%',
                 height: '100%',
                 method: 'scrolled-doc',
                 manager: 'default',
                 flow: 'scrolled-doc',
-                spread: 'none'
+                spread: 'none',
+                allowScriptedContent: true
+            });
+            
+            // اضافه کردن رویداد برای اطمینان از بارگذاری کامل
+            currentRendition.on('rendered', (section) => {
+                console.log('Section rendered:', section);
+                loadingOverlay.style.display = 'none';
             });
             
             currentRendition.on('relocated', (location) => {
-                console.log('Book loaded to location:', location);
+                console.log('Book relocated to:', location);
             });
             
             await currentRendition.display();
-            currentRendition.resize();
-            loadingOverlay.style.display = 'none';
+            
+            // تنظیم مجدد اندازه پس از نمایش
+            setTimeout(() => {
+                currentRendition.resize();
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+            
             return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB', e);
