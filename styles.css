@@ -110,43 +110,42 @@ body.dark {
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s;
-    background-color: var(--card-background);
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+    width: 120px;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .book-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.book-cover {
-    width: 100%;
-    height: 180px;
+.book-card img {
+    width: 100px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.book-placeholder {
+    width: 100px;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #f0f0f0;
-}
-
-.book-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.no-cover {
     font-size: 3rem;
-    color: #999;
+    background-color: #f0f0f0;
+    border-radius: 4px;
 }
 
-.book-card h3 {
-    margin-top: 10px;
-    font-size: 0.95rem;
+.book-title {
+    margin-top: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
     text-align: center;
     width: 100%;
     overflow: hidden;
@@ -154,12 +153,12 @@ body.dark {
     white-space: nowrap;
 }
 
-#book-container {
-    max-width: 700px;
-    margin: 0 auto;
-    height: calc(100% - 60px);
-    text-align: justify;
-    padding: 20px;
+.note-item {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-right: 3px solid #007aff;
 }
 
 #loading-overlay {
@@ -312,3 +311,4 @@ body.dark #loading-overlay {
     margin-bottom: 20px;
     font-size: 1.2rem;
 }
+
