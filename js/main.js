@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevPageBtn = document.getElementById('prev-page-btn');
     const nextPageBtn = document.getElementById('next-page-btn');
 
-    let books = [];
+    // بارگذاری کتاب‌ها از localStorage
+    let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
     // اضافه کردن رویداد به دکمه بازگشت
     if (backBtn) {
@@ -55,6 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!file) return;
         const bookData = await window.EpubManager.extractBookMetadata(file);
         books.push(bookData);
+        
+        // ذخیره کتاب‌ها در localStorage
+        localStorage.setItem('epubBooks', JSON.stringify(books));
+        
         renderLibrary();
     });
 
@@ -193,7 +198,18 @@ document.addEventListener('DOMContentLoaded', function() {
             icon.classList.remove('fa-sun');
             icon.classList.add('fa-moon');
         }
+        
+        // ذخیره تنظیمات تم در localStorage
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     });
+
+    // بارگذاری تنظیمات تم از localStorage
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+        const icon = themeToggle.querySelector('i');
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+    }
 
     renderLibrary();
 });
