@@ -118,11 +118,21 @@ const EpubManager = {
     },
 
     showMindmap: async () => {
-        if (!currentBook) return;
+        if (!currentBook) {
+            console.error('No current book loaded');
+            return;
+        }
         
         try {
+            console.log('Generating mindmap...');
             const toc = await currentBook.loaded.spine.getToc();
+            console.log('TOC:', toc);
+            
             const mindmapContent = document.getElementById('mindmap-content');
+            if (!mindmapContent) {
+                console.error('Mindmap content container not found');
+                return;
+            }
             
             // ساختار داده برای مایند مپ
             const mindmapData = {
@@ -135,12 +145,16 @@ const EpubManager = {
                 }))
             };
             
+            console.log('Mindmap data:', mindmapData);
+            
             // پاک کردن محتوای قبلی
             mindmapContent.innerHTML = '';
             
             // ایجاد SVG برای مایند مپ
             const width = mindmapContent.offsetWidth;
             const height = 400;
+            
+            console.log('SVG dimensions:', width, 'x', height);
             
             const svg = d3.select("#mindmap-content")
                 .append("svg")
@@ -152,6 +166,8 @@ const EpubManager = {
             const root = d3.hierarchy(mindmapData);
             const treeLayout = d3.tree().size([width - 100, height - 100]);
             treeLayout(root);
+            
+            console.log('Hierarchy data:', root);
             
             // رسم خطوط اتصال
             svg.selectAll(".link")
@@ -182,14 +198,19 @@ const EpubManager = {
                 .text(d => d.data.name)
                 .style("font-size", "12px");
             
+            console.log('Mindmap generated successfully');
+            
         } catch (error) {
             console.error('Error generating mindmap:', error);
-            document.getElementById('mindmap-content').innerHTML = `
-                <div class="mindmap-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
-                </div>
-            `;
+            const mindmapContent = document.getElementById('mindmap-content');
+            if (mindmapContent) {
+                mindmapContent.innerHTML = `
+                    <div class="mindmap-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>در ایجاد مایند مپ خطایی رخ داد: ${error.message}</p>
+                    </div>
+                `;
+            }
         }
     },
 
