@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>کتابخانه شخصی | EPUB Notes</title>
-    
-    <meta name="theme-color" content="#FFFFFF"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>کتابخانه شخصی | EPUB Notes</title>
 
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+<meta name="theme-color" content="#FFFFFF"/>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 
-    <link rel="stylesheet" href="styles.css">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="library-view" class="view active">
-        <header class="ios-header">
-            <h1 class="ios-title">کتاب‌های من</h1>
-            <div class="actions">
-                <button id="theme-toggle" class="icon-button ios-button"><span id="theme-icon">🌙</span></button>
-                <button id="upload-button" class="ios-button upload-button"><span class="icon">+</span> افزودن کتاب</button>
-                <input type="file" id="epub-file-input" accept=".epub" style="display:none">
-            </div>
-        </header>
-        <div id="book-grid" class="ios-grid">
-            <p>کتابخانه‌ی شما خالی است. 📚</p>
+<div id="library-view" class="view active">
+    <header class="ios-header">
+        <h1 class="ios-title">کتاب‌های من</h1>
+        <div class="actions">
+            <button id="theme-toggle" class="icon-button ios-button"><span id="theme-icon">🌙</span></button>
+            <button id="upload-button" class="ios-button upload-button"><span class="icon">+</span> افزودن کتاب</button>
+            <input type="file" id="epub-file-input" accept=".epub" style="display:none">
         </div>
+    </header>
+    <div id="book-grid" class="ios-grid">
+        <p>کتابخانه‌ی شما خالی است. 📚</p>
     </div>
+</div>
 
-    <div id="reader-view" class="view">
-        <header class="ios-header reader-header">
-            <button id="back-to-library" class="ios-button back-button"><span class="icon">➜</span> کتابخانه</button>
-            <h2 id="reader-title" class="ios-title reader-title">عنوان کتاب</h2>
-        </header>
-        <div id="reader-area" class="reader-content">
-            <div id="book-container"></div>
-            <div id="loading-overlay" class="loading-overlay">در حال بارگذاری...</div>
-        </div>
+<div id="reader-view" class="view">
+    <header class="ios-header reader-header">
+        <button id="back-to-library" class="ios-button back-button"><span class="icon">➜</span> کتابخانه</button>
+        <h2 id="reader-title" class="ios-title reader-title">عنوان کتاب</h2>
+    </header>
+    <div id="reader-area" class="reader-content">
+        <div id="book-container"></div>
+        <div id="loading-overlay" class="loading-overlay">در حال بارگذاری...</div>
     </div>
+</div>
 
-    <script type="module" src="js/main.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
