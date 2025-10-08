@@ -24,6 +24,7 @@ const EpubManager = {
             
             // ایجاد کتاب با فایل صحیح
             currentBook = ePub(file);
+            window.currentBook = currentBook; // ذخیره در window برای دسترسی عمومی
             
             // تنظیمات رندر بهینه
             currentRendition = currentBook.renderTo("epub-content", {
@@ -35,7 +36,7 @@ const EpubManager = {
             
             await currentRendition.display();
             
-            // تنظیمات استایل iframe با تأخیر بیشتر
+            // تنظیمات استایل iframe بلافاصله
             setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
@@ -55,13 +56,14 @@ const EpubManager = {
                         iframeDoc.body.style.fontSize = '16px';
                         iframeDoc.body.style.color = '#1e293b';
                         iframeDoc.body.style.padding = '20px';
+                        iframeDoc.body.style.margin = '0';
                         
                         // پنهان کردن اسکرول‌بارهای اضافی
                         iframeDoc.documentElement.style.overflow = 'hidden';
                         iframeDoc.body.style.overflow = 'auto';
                     }
                 }
-            }, 1000);
+            }, 500);
             
             // افزودن رویداد ردیابی پیشرفت
             currentRendition.on('relocated', (location) => {
