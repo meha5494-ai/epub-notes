@@ -1,4 +1,3 @@
-// js/epub-manager.js
 import { notesManagerInstance } from './notes-manager.js';
 
 const bookContainer = document.getElementById('book-container');
@@ -44,7 +43,6 @@ export const EpubManager = {
 
             loadingOverlay.classList.add('hidden');
             EpubManager.setupSelectionHandler();
-            return currentRendition;
 
         } catch (error) {
             console.error('Error loading EPUB:', error);
@@ -55,12 +53,12 @@ export const EpubManager = {
     extractBookMetadata: async (file) => {
         const book = new ePub(file);
         const bookId = file.name + file.size + file.lastModified;
-
         await book.opened;
         const metadata = book.metadata;
 
         let coverDataUrl = null;
-        try { coverDataUrl = await book.coverUrl(); } catch (e) { console.warn(e); }
+        try { coverDataUrl = await book.coverUrl(); } 
+        catch (e) { console.warn('Could not extract cover image:', e); }
 
         return {
             id: bookId,
@@ -76,8 +74,11 @@ export const EpubManager = {
 
         currentRendition.on('selected', (cfiRange, contents) => {
             const text = currentRendition.getRange(cfiRange).toString().trim();
-            if (text.length > 0) EpubManager.showAddNotePopover(cfiRange, text, contents);
-            else EpubManager.clearSelection();
+            if (text.length > 0) {
+                EpubManager.showAddNotePopover(cfiRange, text, contents);
+            } else {
+                EpubManager.clearSelection();
+            }
         });
 
         currentRendition.hooks.render.register(async (contents) => {
@@ -99,12 +100,12 @@ export const EpubManager = {
             const style = doc.createElement('style');
             style.textContent = `
                 .epub-note-highlight {
-                    background-color: var(--highlight-color, rgba(0, 122, 255, 0.3)) !important; 
+                    background-color: var(--highlight-color, rgba(0, 122, 255, 0.3)) !important;
                     cursor: pointer;
                     direction: rtl;
                 }
                 body {
-                    background-color: var(--bg-color); 
+                    background-color: var(--bg-color);
                     color: var(--text-color);
                 }
             `;
@@ -135,14 +136,15 @@ export const EpubManager = {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             const iframeRect = contents.iframe.getBoundingClientRect();
-            const posY = iframeRect.top + rect.bottom;
 
+            const posY = iframeRect.top + rect.bottom;
             popover.style.left = '50%';
             popover.style.transform = 'translate(-50%, -50%)';
             popover.style.top = `${posY + 20}px`;
 
-            if (posY + popover.offsetHeight > window.innerHeight)
+            if (posY + popover.offsetHeight > window.innerHeight) {
                 popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
+            }
         }
 
         popover.classList.add('visible');
