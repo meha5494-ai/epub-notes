@@ -23,6 +23,9 @@
                 <button class="icon-btn" id="theme-toggle">
                     <i class="fas fa-moon"></i>
                 </button>
+                <button class="icon-btn" id="settings-btn">
+                    <i class="fas fa-cog"></i>
+                </button>
                 <button class="primary-btn" id="upload-button">
                     <i class="fas fa-plus"></i> افزودن کتاب
                 </button>
@@ -62,6 +65,9 @@
             <button class="icon-btn mobile-btn" id="mindmap-btn">
                 <i class="fas fa-project-diagram"></i>
             </button>
+            <button class="icon-btn mobile-btn" id="settings-btn-mobile">
+                <i class="fas fa-cog"></i>
+            </button>
         </div>
     </div>
     
@@ -88,17 +94,6 @@
     
     <div class="reader-container">
         <div id="book-container"></div>
-    </div>
-    
-    <!-- دکمه‌های ناوبری صفحات (فقط در نسخه دسکتاپ) -->
-    <div class="page-navigation desktop-only">
-        <button class="page-nav-btn" id="prev-page-btn">
-            <i class="fas fa-chevron-right"></i>
-        </button>
-        <span class="page-info-nav" id="page-info-nav">صفحه 1 از 1</span>
-        <button class="page-nav-btn" id="next-page-btn">
-            <i class="fas fa-chevron-left"></i>
-        </button>
     </div>
 </div>
 
@@ -145,6 +140,53 @@
         <div class="mindmap-placeholder">
             <i class="fas fa-spinner fa-spin"></i>
             <p>در حال ساخت مایند مپ...</p>
+        </div>
+    </div>
+</div>
+
+<!-- پنل تنظیمات -->
+<div id="settings-sheet" class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+        <h3><i class="fas fa-cog"></i> تنظیمات</h3>
+        <button class="close-btn" id="close-settings">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="sheet-content">
+        <div class="setting-group">
+            <label>اندازه فونت</label>
+            <div class="setting-options">
+                <button class="setting-btn" data-setting="font-size" data-value="small">کوچک</button>
+                <button class="setting-btn active" data-setting="font-size" data-value="medium">متوسط</button>
+                <button class="setting-btn" data-setting="font-size" data-value="large">بزرگ</button>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <label>رنگ صفحه</label>
+            <div class="setting-options">
+                <button class="setting-btn active" data-setting="page-color" data-value="light">روشن</button>
+                <button class="setting-btn" data-setting="page-color" data-value="sepia">زرد</button>
+                <button class="setting-btn" data-setting="page-color" data-value="dark">تاریک</button>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <label>فونت</label>
+            <div class="setting-options">
+                <button class="setting-btn active" data-setting="font-family" data-value="vazirmatn">وزیرمتن</button>
+                <button class="setting-btn" data-setting="font-family" data-value="yekan">یکان</button>
+                <button class="setting-btn" data-setting="font-family" data-value="samim">صمیم</button>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <label>حالت خواندن</label>
+            <div class="setting-options">
+                <button class="setting-btn active" data-setting="reading-mode" data-value="continuous">پیوسته</button>
+                <button class="setting-btn" data-setting="reading-mode" data-value="paged">صفحه‌به‌صفحه</button>
+            </div>
         </div>
     </div>
 </div>
