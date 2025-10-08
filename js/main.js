@@ -1,59 +1,28 @@
 // js/main.js
 import { notesManagerInstance } from './notes-manager.js';
-import { EPUBManager } from './epub-manager.js';
+import { EpubManager } from './epub-manager.js';
 
-// نمونه از EPUBManager
-const epubManager = new EPUBManager('book-container');
-
-// انتخاب فایل EPUB و بارگذاری
+// دکمه‌ها و input‌ها
 const fileInput = document.getElementById('epub-file-input');
+const uploadButton = document.getElementById('upload-button');
+const backButton = document.getElementById('back-to-library');
+const toggleNotesButton = document.getElementById('toggle-notes');
+const closeNotesButton = document.getElementById('close-notes-sheet');
+
+// بارگذاری فایل EPUB
+uploadButton.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
-    if (file) {
-        await epubManager.loadBook(file);
-    }
+    if (!file) return;
+
+    const bookData = await EpubManager.extractBookMetadata(file);
+    await EpubManager.loadEpub(bookData.id, file, bookData.title);
 });
 
-// افزودن یادداشت نمونه
-notesManagerInstance.addNote("اولین یادداشت");
-
-// Listener برای پیام‌های async (مثلاً از Extension)
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (!message || !message.action) {
-        sendResponse({ success: false, error: "Invalid message" });
-        return;
-    }
-
-    switch (message.action) {
-        case "getNotes":
-            (async () => {
-                sendResponse({ success: true, notes: notesManagerInstance.getNotes() });
-            })();
-            return true;
-
-        case "addNote":
-            (async () => {
-                if (message.note) {
-                    notesManagerInstance.addNote(message.note);
-                    sendResponse({ success: true });
-                } else {
-                    sendResponse({ success: false, error: "No note provided" });
-                }
-            })();
-            return true;
-
-        case "removeNote":
-            (async () => {
-                if (typeof message.index === 'number') {
-                    notesManagerInstance.removeNote(message.index);
-                    sendResponse({ success: true });
-                } else {
-                    sendResponse({ success: false, error: "Invalid index" });
-                }
-            })();
-            return true;
-
-        default:
-            sendResponse({ success: false, error: "Unknown action" });
-    }
+// مدیریت نماهای کتابخانه و خواننده
+backButton.addEventListener('click', () => {
+    document.getElementById('reader-view').classList.remove('active');
+    document.getElementById('library-view').classList.add('active');
 });
+toggleNotesButton.addEventListener('click', () => EpubManager.showNotesSheet());
+closeNotesButton.addEventListener('click', () => EpubManager.hideNotesSheet());
