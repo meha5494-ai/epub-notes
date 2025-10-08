@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
+        // اطمینان از نمایش کامل view قبل از بارگذاری کتاب
         setTimeout(async () => {
             await window.EpubManager.loadEpub(book.id, book.file, book.title);
         }, 300);
@@ -116,6 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // دکمه بازگشت به کتابخانه
     backBtn.addEventListener('click', () => {
         readerView.classList.remove('active');
         libraryView.classList.add('active');
