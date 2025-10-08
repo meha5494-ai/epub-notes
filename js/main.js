@@ -19,20 +19,9 @@ document.addEventListener('DOMContentLoaded', function(){
     fileInput.addEventListener('change', async e=>{
         const file = e.target.files[0];
         if(!file) return;
-        
-        try {
-            // استفاده از متد extractBookMetadata برای دریافت اطلاعات کتاب
-            const bookData = await EpubManager.extractBookMetadata(file);
-            books.push(bookData);
-            renderLibrary();
-        } catch (error) {
-            console.error('Error adding book:', error);
-            // در صورت خطا، حداقل اطلاعات پایه را اضافه کن
-            const bookId = file.name + file.size + file.lastModified;
-            const title = file.name.replace('.epub','');
-            books.push({id:bookId,title,file});
-            renderLibrary();
-        }
+        const bookData = await EpubManager.extractBookMetadata(file);
+        books.push(bookData);
+        renderLibrary();
     });
 
     function renderLibrary(){
@@ -45,14 +34,12 @@ document.addEventListener('DOMContentLoaded', function(){
             const div = document.createElement('div');
             div.className='book-card';
             
-            // نمایش جلد کتاب اگر وجود داشته باشد
             if(book.cover) {
                 const img = document.createElement('img');
                 img.src = book.cover;
                 img.alt = book.title;
                 div.appendChild(img);
             } else {
-                // اگر جلد وجود نداشت، یک placeholder نمایش بده
                 const placeholder = document.createElement('div');
                 placeholder.className = 'book-placeholder';
                 placeholder.textContent = '📖';
@@ -69,11 +56,11 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 
-    function openBook(book){
+    async function openBook(book){ // اضافه کردن async
         libraryView.classList.remove('active');
         readerView.classList.add('active');
-        // استفاده از متد loadEpub برای باز کردن کتاب
-        EpubManager.loadEpub(book.id, book.file, book.title);
+        document.getElementById('reader-title').textContent = book.title; // تنظیم عنوان کتاب
+        await EpubManager.loadEpub(book.id, book.file, book.title); // اضافه کردن await
         window.NotesManager.clear();
         renderNotes();
     }
