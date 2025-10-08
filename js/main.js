@@ -1,37 +1,7 @@
 // main.js
+import { notesManagerInstance } from './notesManager.js';
 
-// بررسی می‌کنیم اگر NotesManager وجود نداشت، تعریف شود
-if (typeof NotesManager === 'undefined') {
-    class NotesManager {
-        constructor() {
-            this.notes = [];
-        }
-
-        // افزودن یادداشت جدید
-        addNote(note) {
-            if (note && typeof note === 'string') {
-                this.notes.push(note);
-            }
-        }
-
-        // دریافت همه یادداشت‌ها
-        getNotes() {
-            return this.notes;
-        }
-
-        // حذف یادداشت با اندیس
-        removeNote(index) {
-            if (index >= 0 && index < this.notes.length) {
-                this.notes.splice(index, 1);
-            }
-        }
-    }
-}
-
-// ایجاد یک نمونه یکتا
-const notesManagerInstance = new NotesManager();
-
-// مثال استفاده از NotesManager
+// افزودن یک یادداشت نمونه
 notesManagerInstance.addNote("اولین یادداشت");
 
 // Listener برای پیام‌های async (مثلاً از extension یا دیگر اسکریپت‌ها)
@@ -47,7 +17,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const notes = notesManagerInstance.getNotes();
                 sendResponse({ success: true, notes });
             })();
-            return true; // indicate async response
+            return true;
 
         case "addNote":
             (async () => {
