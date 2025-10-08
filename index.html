@@ -63,6 +63,24 @@
         <div id="book-container"></div>
     </div>
     
+    <!-- نوار پیشرفت و کنترل‌ها -->
+    <div class="reading-controls">
+        <div class="progress-info">
+            <span id="progress-text">صفحه 1 از 1</span>
+            <div class="progress-bar">
+                <div id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="control-buttons">
+            <button class="control-btn" id="view-toggle-btn" title="تغییر نما">
+                <i class="fas fa-file-alt"></i>
+            </button>
+            <button class="control-btn" id="outline-btn" title="فهرست مطالب">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
+    </div>
+    
     <!-- دکمه‌های ناوبری صفحات -->
     <div class="page-navigation">
         <button class="page-nav-btn" id="prev-page-btn">
@@ -72,6 +90,24 @@
         <button class="page-nav-btn" id="next-page-btn">
             <i class="fas fa-chevron-left"></i>
         </button>
+    </div>
+</div>
+
+<!-- پنل فهرست مطالب -->
+<div id="outline-panel" class="outline-panel">
+    <div class="panel-header">
+        <h3><i class="fas fa-list"></i> فهرست مطالب</h3>
+        <button class="close-btn" id="close-outline">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="panel-content">
+        <div id="outline-list">
+            <div class="loading-outline">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>در حال بارگذاری فهرست مطالب...</p>
+            </div>
+        </div>
     </div>
 </div>
 
