@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveNoteBtn = document.getElementById('save-note');
     const noteText = document.getElementById('note-text');
     const addNoteBtn = document.getElementById('add-note-btn');
+    
+    // دکمه‌های ناوبری صفحات
+    const prevPageBtn = document.getElementById('prev-page-btn');
+    const nextPageBtn = document.getElementById('next-page-btn');
 
     let books = [];
 
@@ -27,6 +31,21 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Back button event listener added successfully');
     } else {
         console.error('Back button element not found');
+    }
+
+    // اضافه کردن رویداد به دکمه‌های ناوبری
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function() {
+            console.log('Previous page button clicked');
+            window.EpubManager.prev();
+        });
+    }
+
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function() {
+            console.log('Next page button clicked');
+            window.EpubManager.next();
+        });
     }
 
     uploadBtn.addEventListener('click', () => fileInput.click());
@@ -88,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
-        // بارگذاری کتاب بدون نمایش لودینگ
+        // بارگذاری کتاب
         try {
             console.log('Loading book...');
             await window.EpubManager.loadEpub(book.id, book.file, book.title);
