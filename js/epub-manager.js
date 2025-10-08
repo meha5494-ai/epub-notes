@@ -1,12 +1,12 @@
 import { notesManagerInstance } from './notes-manager.js';
 
-const bookContainer = document.getElementById('book-container');
-const loadingOverlay = document.getElementById('loading-overlay');
+const bookContainer=document.getElementById('book-container');
+const loadingOverlay=document.getElementById('loading-overlay');
 
-let currentBook = null;
-let currentRendition = null;
+let currentBook=null;
+let currentRendition=null;
 
-export const EpubManager = {
+export const EpubManager={
     loadEpub: async(id,file,title)=>{
         loadingOverlay.style.display='flex';
         bookContainer.innerHTML='';
@@ -16,10 +16,7 @@ export const EpubManager = {
             await currentRendition.display();
             loadingOverlay.style.display='none';
             return currentRendition;
-        }catch(e){
-            console.error('Error loading EPUB',e);
-            loadingOverlay.textContent='خطا در بارگذاری کتاب';
-        }
+        }catch(e){ console.error('Error loading EPUB',e); loadingOverlay.textContent='خطا در بارگذاری کتاب'; }
     },
 
     extractBookMetadata: async(file)=>{
