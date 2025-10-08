@@ -21,5 +21,4 @@ export class NotesManager {
     }
 }
 
-// نمونه یکتا برای استفاده در پروژه
 export const notesManagerInstance = new NotesManager();
