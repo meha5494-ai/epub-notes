@@ -8,23 +8,33 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
-            // ایجاد یک div برای محتوای کتاب
+            // ایجاد یک div برای محتوای کتاب با ارتفاع کامل
             const contentDiv = document.createElement('div');
             contentDiv.style.width = '100%';
-            contentDiv.style.height = '600px';
+            contentDiv.style.height = '100%';
+            contentDiv.style.minHeight = '500px';
             bookContainer.appendChild(contentDiv);
             
             currentBook = ePub(file);
             
-            // رندر کتاب با تنظیمات ساده
+            // رندر کتاب با تنظیمات بهینه برای نمایش محتوا
             currentRendition = currentBook.renderTo(contentDiv, {
                 width: '100%',
                 height: '100%',
-                flow: 'scrolled'
+                method: 'scrolled-doc',
+                flow: 'scrolled-doc',
+                manager: 'continuous'
             });
             
             // نمایش کتاب
             await currentRendition.display();
+            
+            // تنظیم مجدد اندازه بعد از نمایش
+            setTimeout(() => {
+                if (currentRendition) {
+                    currentRendition.resize();
+                }
+            }, 100);
             
             return currentRendition;
         } catch (e) {
