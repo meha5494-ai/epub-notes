@@ -1,17 +1,17 @@
-// js/notes-manager.js
 export class NotesManager {
     constructor() {
         this.notes = [];
     }
 
     addNote(note) {
-        if (note && typeof note === 'string') {
+        if (note && typeof note === 'object') {
             this.notes.push(note);
         }
     }
 
-    getNotes() {
-        return this.notes;
+    getNotes(bookId = null) {
+        if (!bookId) return this.notes;
+        return this.notes.filter(n => n.bookId === bookId);
     }
 
     removeNote(index) {
