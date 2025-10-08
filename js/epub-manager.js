@@ -10,25 +10,35 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
+            // ایجاد یک div برای محتوای کتاب
+            const contentDiv = document.createElement('div');
+            contentDiv.style.width = '100%';
+            contentDiv.style.height = '100%';
+            contentDiv.style.minHeight = '500px';
+            bookContainer.appendChild(contentDiv);
+            
             currentBook = ePub(file);
             
             // اطمینان از اینکه کتاب به درستی باز شده
             await currentBook.ready;
             
-            currentRendition = currentBook.renderTo('book-container', {
+            currentRendition = currentBook.renderTo(contentDiv, {
                 width: '100%',
                 height: '100%',
-                method: 'scrolled-doc',
-                manager: 'default',
-                flow: 'scrolled-doc',
-                spread: 'none',
-                allowScriptedContent: true
+                method: 'continuous',
+                flow: 'scrolled',
+                manager: 'continuous'
             });
             
             // اضافه کردن رویداد برای اطمینان از بارگذاری کامل
             currentRendition.on('rendered', (section) => {
                 console.log('Section rendered:', section);
-                loadingOverlay.style.display = 'none';
+                // پنهان کردن لودینگ بعد از رندر اولین بخش
+                if (loadingOverlay.style.display === 'flex') {
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+                }
             });
             
             currentRendition.on('relocated', (location) => {
@@ -41,11 +51,11 @@ const EpubManager = {
             setTimeout(() => {
                 currentRendition.resize();
                 window.dispatchEvent(new Event('resize'));
-            }, 100);
+            }, 200);
             
             return currentRendition;
         } catch (e) {
-            console.error('Error loading EPUB', e);
+            console.error('Error loading EPUB:', e);
             loadingOverlay.innerHTML = `
                 <div class="loading-card">
                     <div class="error-icon">
