@@ -303,6 +303,75 @@ body.dark {
     flex-direction: column;
 }
 
+/* Progress Container */
+.progress-container {
+    width: 100%;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--surface-alt);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.page-info {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* View Controls */
+.view-controls {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.view-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text-light);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.view-btn:hover {
+    background: var(--surface-alt);
+    transform: scale(1.1);
+}
+
+.view-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
 /* Book Container */
 #book-container {
     background: var(--background);
@@ -317,7 +386,7 @@ body.dark {
     height: 100%;
 }
 
-/* EPUB Content - با استایل‌های مستقیم */
+/* EPUB Content */
 #epub-content {
     width: 100%;
     height: 600px;
@@ -343,7 +412,6 @@ body.dark {
     overflow: auto;
 }
 
-/* استایل‌های اضافی برای محتوای کتاب */
 #epub-content iframe body {
     direction: rtl;
     font-family: 'Vazirmatn', sans-serif;
@@ -351,22 +419,6 @@ body.dark {
     font-size: 16px;
     color: #1e293b;
     padding: 20px;
-}
-
-#epub-content iframe p {
-    margin-bottom: 16px;
-    text-align: justify;
-}
-
-#epub-content iframe h1, 
-#epub-content iframe h2, 
-#epub-content iframe h3,
-#epub-content iframe h4,
-#epub-content iframe h5,
-#epub-content iframe h6 {
-    margin-top: 24px;
-    margin-bottom: 16px;
-    color: #1e293b;
 }
 
 /* Page Navigation */
@@ -412,7 +464,7 @@ body.dark {
     transform: scale(1);
 }
 
-.page-info {
+.page-info-nav {
     font-size: 0.9rem;
     font-weight: 500;
     color: var(--text);
@@ -458,6 +510,25 @@ body.dark {
 .error-container p {
     margin-bottom: 24px;
     max-width: 400px;
+}
+
+.retry-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.retry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Notes Sheet */
@@ -697,6 +768,101 @@ body.dark {
     box-shadow: var(--shadow);
 }
 
+/* Mindmap Panel */
+.mindmap-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 350px;
+    height: 100%;
+    background: var(--surface);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+}
+
+.mindmap-panel.visible {
+    transform: translateX(0);
+}
+
+.panel-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mindmap-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.mindmap-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-light);
+    text-align: center;
+}
+
+.mindmap-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.mindmap-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--accent);
+    text-align: center;
+}
+
+.mindmap-error i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+/* Mindmap SVG Styles */
+.mindmap-content svg {
+    width: 100%;
+    height: 100%;
+}
+
+.link {
+    fill: none;
+    stroke: #e2e8f0;
+    stroke-width: 2px;
+}
+
+.node circle {
+    fill: #6366f1;
+    stroke: white;
+    stroke-width: 2px;
+}
+
+.node text {
+    font-size: 12px;
+    fill: var(--text);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .app-header h1 {
@@ -751,12 +917,16 @@ body.dark {
         font-size: 0.9rem;
     }
     
-    .page-info {
+    .page-info-nav {
         font-size: 0.8rem;
         min-width: 80px;
     }
     
     .bottom-sheet {
         height: 80%;
+    }
+    
+    .mindmap-panel {
+        width: 100%;
     }
 }
