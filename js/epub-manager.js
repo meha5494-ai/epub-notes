@@ -8,7 +8,6 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
-            // ایجاد یک div با ID مشخص برای محتوای کتاب
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
             contentDiv.style.cssText = `
@@ -24,7 +23,6 @@ const EpubManager = {
             
             currentBook = ePub(file);
             
-            // رندر کتاب با تنظیمات بسیار ساده
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
@@ -32,10 +30,15 @@ const EpubManager = {
                 manager: "continuous"
             });
             
-            // نمایش کتاب
             await currentRendition.display();
             
-            // بررسی و تنظیم iframe بعد از رندر
+            // افزودن رویداد برای ردیابی پیشرفت
+            currentRendition.on('relocated', location => {
+                updateProgress(location.start / location.total * 100);
+                updatePageInfo(location.start, location.total);
+            });
+            
+            // تنظیمات استایل
             setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
@@ -47,7 +50,6 @@ const EpubManager = {
                         background: white;
                     `;
                     
-                    // اطمینان از اینکه محتوای iframe قابل مشاهده است
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     if (iframeDoc && iframeDoc.body) {
                         iframeDoc.body.style.direction = 'rtl';
@@ -105,6 +107,82 @@ const EpubManager = {
                         <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
                 </div>`;
+        }
+    },
+
+    // متدهای جدید برای مدیریت پیشرفت
+    updateProgress: (percent) => {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        
+        if (progressFill) {
+            progressFill.style.width = `${percent}%`;
+        }
+        if (progressText) {
+            progressText.textContent = `${Math.round(percent)}%`;
+        }
+    },
+
+    updatePageInfo: (current, total) => {
+        const pageInfo = document.getElementById('page-info');
+        if (pageInfo) {
+            pageInfo.textContent = `صفحه ${current} از ${total}`;
+        }
+    },
+
+    // متدهای جدید برای ناوبری
+    prev: () => {
+        if (currentRendition) {
+            currentRendition.prev();
+        }
+    },
+
+    next: () => {
+        if (currentRendition) {
+            currentRendition.next();
+        }
+    },
+
+    // متد جدید برای نمایش مایند مپ
+    showMindmap: async () => {
+        if (!currentBook) return;
+        
+        try {
+            const toc = await currentBook.loaded.spine.getToc();
+            const mindmapContent = document.querySelector('.mindmap-content');
+            
+            // ایجاد ساختار ساده مایند مپ
+            mindmapContent.innerHTML = `
+                <div class="mindmap-tree">
+                    ${toc.map(item => `
+                        <div class="mindmap-node">
+                            <div class="node-content">
+                                <i class="fas fa-bookmark"></i>
+                                <span>${item.label}</span>
+                            </div>
+                            <div class="node-children">
+                                ${item.subitems ? item.subitems.map(sub => `
+                                    <div class="node-child">
+                                        <i class="fas fa-file-alt"></i>
+                                        <span>${sub.label}</span>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // نمایش پنل مایند مپ
+            document.getElementById('mindmap-panel').classList.add('visible');
+        } catch (error) {
+            console.error('Error generating mindmap:', error);
+            document.querySelector('.mindmap-content').innerHTML = `
+                <div class="mindmap-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
+                </div>
+            `;
         }
     },
 
