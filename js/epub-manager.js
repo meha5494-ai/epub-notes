@@ -63,6 +63,12 @@ const EpubManager = {
                 }
             }, 1000);
             
+            // افزودن رویداد ردیابی پیشرفت
+            currentRendition.on('relocated', (location) => {
+                this.updateProgress(location.start / location.total * 100);
+                this.updatePageInfo(location.start, location.total);
+            });
+            
             return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB:', e);
@@ -86,6 +92,8 @@ const EpubManager = {
         
         if (progressFill) {
             progressFill.style.width = `${percent}%`;
+            // افزودن انیمیشن به نوار پیشرفت
+            progressFill.style.transition = 'width 0.3s ease';
         }
         if (progressText) {
             progressText.textContent = `${Math.round(percent)}%`;
@@ -94,13 +102,9 @@ const EpubManager = {
 
     updatePageInfo: (current, total) => {
         const pageInfo = document.getElementById('page-info');
-        const pageInfoNav = document.getElementById('page-info-nav');
         
         if (pageInfo) {
             pageInfo.textContent = `صفحه ${current} از ${total}`;
-        }
-        if (pageInfoNav) {
-            pageInfoNav.textContent = `صفحه ${current} از ${total}`;
         }
     },
 
@@ -122,12 +126,12 @@ const EpubManager = {
                 }))
             };
             
-            // ایجاد SVG برای مایند مپ
-            const width = 300;
-            const height = 400;
-            
             // پاک کردن محتوای قبلی
             mindmapContent.innerHTML = '';
+            
+            // ایجاد SVG برای مایند مپ
+            const width = mindmapContent.offsetWidth;
+            const height = 400;
             
             const svg = d3.select("#mindmap-content")
                 .append("svg")
@@ -189,6 +193,12 @@ const EpubManager = {
     next: () => {
         if (currentRendition) {
             currentRendition.next();
+        }
+    },
+
+    setViewMode: (mode) => {
+        if (currentRendition) {
+            currentRendition.flow(mode === 'paged' ? 'paginated' : 'scrolled-doc');
         }
     },
 
