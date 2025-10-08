@@ -1,47 +1,49 @@
 // js/epub-manager.js
 
-// Global variables for EPUB state
-let currentBook = null;
-let currentRendition = null;
-let currentBookId = null;
-let isSelectingText = false;
+// دسترسی به NoteManager از فضای گلوبال
+const NotesManager = window.NotesManager;
 
+// DOM Elements
 const readerArea = document.getElementById('reader-area');
 const bookContainer = document.getElementById('book-container');
 const loadingOverlay = document.getElementById('loading-overlay');
 const popover = document.getElementById('add-note-popover');
 const notesSheet = document.getElementById('notes-sheet');
+const noteTextInput = document.getElementById('note-text-input');
+
+// Global variables for EPUB state
+let currentBook = null;
+let currentRendition = null;
+let currentBookId = null;
+let currentCfiRange = null;     // نگهداری وضعیت Popover در همین ماژول
+let currentContextText = null;  // نگهداری وضعیت Popover در همین ماژول
+let isSelectingText = false;
+
 
 /**
  * مدیریت خواندن EPUB (epub.js)
+ * این شیء به فضای گلوبال (window) منتقل می‌شود.
  */
-export const EpubManager = {
-    // بارگذاری فایل EPUB و نمایش آن
+window.EpubManager = {
     loadEpub: async (bookId, epubFile, bookTitle) => {
         currentBookId = bookId;
         
-        // Show loading and update title
         document.getElementById('reader-title').textContent = bookTitle;
         loadingOverlay.classList.remove('hidden');
-        bookContainer.innerHTML = ''; // Clear previous book
+        bookContainer.innerHTML = ''; 
 
         try {
-            // 1. Create a Book object from the Blob
             currentBook = new ePub(epubFile);
 
-            // 2. Create a Rendition (renderer)
             currentRendition = currentBook.renderTo('book-container', {
                 width: '100%',
                 height: '100%',
-                // Use scrolled-doc for a smooth, web-like scrolling experience (mobile friendly)
                 method: 'scrolled-doc',
                 manager: 'default'
             });
 
-            // 3. Display the book
             await currentRendition.display();
 
-            // 4. Set RTL direction for rendered content
             currentRendition.on('rendered', (section, view) => {
                 const doc = view.document;
                 if (doc) {
@@ -52,11 +54,9 @@ export const EpubManager = {
                 }
             });
 
-            // 5. Hide loading
             loadingOverlay.classList.add('hidden');
 
-            // 6. Setup text selection for note creation
-            EpubManager.setupSelectionHandler();
+            window.EpubManager.setupSelectionHandler();
             
             return currentRendition;
 
@@ -66,27 +66,19 @@ export const EpubManager = {
         }
     },
 
-    // بازیابی جزئیات کتاب برای نمایش در کارت (جلد و عنوان)
     extractBookMetadata: async (file) => {
         const book = new ePub(file);
-        
-        // Use File properties for a simple unique ID
         const bookId = file.name + file.size + file.lastModified; 
 
-        // Wait for metadata to be parsed
         await book.opened;
         const metadata = book.metadata;
-        const coverUrl = await book.loaded.cover;
         
         let coverDataUrl = null;
-        if (coverUrl) {
-            try {
-                // Get the cover image as a Blob and convert to Data URL
-                const cover = await book.coverUrl();
-                coverDataUrl = cover; // epub.js coverUrl() often returns an object URL or Data URL directly
-            } catch (e) {
-                console.warn('Could not extract cover image:', e);
-            }
+        try {
+            const cover = await book.coverUrl();
+            coverDataUrl = cover;
+        } catch (e) {
+            console.warn('Could not extract cover image:', e);
         }
 
         return {
@@ -94,43 +86,38 @@ export const EpubManager = {
             title: metadata.title || file.name.replace('.epub', ''),
             author: metadata.creator || 'ناشناس',
             cover: coverDataUrl,
-            epubFile: file // The original file will be stored in IndexedDB
+            epubFile: file
         };
     },
 
-    // تنظیمات رویداد انتخاب متن برای یادداشت‌برداری
     setupSelectionHandler: () => {
         if (!currentRendition) return;
 
         currentRendition.on('selected', (cfiRange, contents) => {
             isSelectingText = true;
-            // Get the text of the selection
             const text = currentRendition.getRange(cfiRange).toString().trim();
             
             if (text.length > 0) {
-                // Show the popover for adding a note
-                showAddNotePopover(cfiRange, text, contents);
+                // نمایش Popover از طریق تابع داخلی
+                window.EpubManager.showAddNotePopover(cfiRange, text, contents); 
             } else {
-                EpubManager.clearSelection();
+                window.EpubManager.clearSelection();
             }
             isSelectingText = false;
         });
         
-        // Highlight existing notes when rendering
         currentRendition.hooks.render.register(async (contents) => {
             const notes = await NotesManager.getNotes(currentBookId);
             notes.forEach(note => {
                 if (note.cfiRange) {
                     currentRendition.annotations.highlight(note.cfiRange, { 'fill': 'yellow', 'opacity': '0.3' }, (e) => {
-                        // Click handler for highlights - opens the note sheet
-                        if (e.target.tagName === 'A') return; // Avoid links
-                        EpubManager.showNotesSheet();
+                        if (e.target.tagName === 'A') return; 
+                        window.EpubManager.showNotesSheet();
                     }, 'epub-note-highlight');
                 }
             });
         });
 
-        // Add CSS for highlight to iframe
         currentRendition.on('added', (section, view) => {
             const doc = view.document;
             const style = doc.createElement('style');
@@ -145,74 +132,62 @@ export const EpubManager = {
         });
     },
     
-    // پاک کردن انتخاب متن
     clearSelection: () => {
         if (currentRendition) {
             currentRendition.getSelection().removeAllRanges();
-            hideAddNotePopover();
+            window.EpubManager.hideAddNotePopover();
         }
     },
     
-    // نمایش پنل یادداشت‌ها
     showNotesSheet: () => {
         notesSheet.classList.add('visible');
     },
     
-    // بستن پنل یادداشت‌ها
     hideNotesSheet: () => {
         notesSheet.classList.remove('visible');
     },
 
-    // دریافت ID کتاب فعلی
     getCurrentBookId: () => currentBookId,
-    
-    // دریافت Rendition فعلی
-    getCurrentRendition: () => currentRendition
-};
+    getCurrentRendition: () => currentRendition,
 
-// ------------------- Popover Logic -------------------
-const noteTextInput = document.getElementById('note-text-input');
-let currentCfiRange = null;
-let currentContextText = null;
-
-const showAddNotePopover = (cfiRange, contextText, contents) => {
-    currentCfiRange = cfiRange;
-    currentContextText = contextText;
-    noteTextInput.value = '';
+    // ------------------- Popover Management -------------------
     
-    // Determine the position to display the popover near the selection
-    const selection = contents.window.getSelection();
-    if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const iframeRect = contents.iframe.getBoundingClientRect();
+    showAddNotePopover: (cfiRange, contextText, contents) => {
+        currentCfiRange = cfiRange;
+        currentContextText = contextText;
+        noteTextInput.value = '';
         
-        // Calculate position relative to the main window
-        const posX = iframeRect.left + rect.left + (rect.width / 2);
-        const posY = iframeRect.top + rect.bottom;
-        
-        // Center the popover horizontally
-        popover.style.left = '50%';
-        popover.style.transform = 'translate(-50%, -50%)';
-        
-        // Position vertically, avoiding the header/footer
-        popover.style.top = `${posY + 20}px`;
-        
-        // If it goes off the bottom, position it above the selection
-        if (posY + popover.offsetHeight > window.innerHeight) {
-            popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
+        // Logic for positioning Popover
+        const selection = contents.window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            const iframeRect = contents.iframe.getBoundingClientRect();
+            
+            const posX = iframeRect.left + rect.left + (rect.width / 2);
+            const posY = iframeRect.top + rect.bottom;
+            
+            popover.style.left = '50%';
+            popover.style.transform = 'translate(-50%, -50%)';
+            popover.style.top = `${posY + 20}px`;
+            
+            if (posY + popover.offsetHeight > window.innerHeight) {
+                popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
+            }
         }
-    }
-    
-    popover.classList.add('visible');
-    noteTextInput.focus();
+        
+        popover.classList.add('visible');
+        noteTextInput.focus();
+    },
+
+    hideAddNotePopover: () => {
+        popover.classList.remove('visible');
+        currentCfiRange = null;
+        currentContextText = null;
+    },
+
+    getCurrentNoteData: () => ({
+        cfiRange: currentCfiRange,
+        contextText: currentContextText
+    })
 };
-
-const hideAddNotePopover = () => {
-    popover.classList.remove('visible');
-    currentCfiRange = null;
-    currentContextText = null;
-};
-
-
-// Note: Event listeners for save/cancel are in main.js
