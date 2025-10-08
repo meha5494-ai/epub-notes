@@ -1,18 +1,16 @@
 // js/notes-manager.js
 
-// Using idb-keyval global object (UMD build)
+// دسترسی به idbKeyval از فضای گلوبال UMD
 const { get, set, keys, del, createStore } = idbKeyval;
 
-// Separate IndexedDB store for notes
 const notesStore = createStore('epubNotesDB', 'notesStore');
-// Separate IndexedDB store for book files (Blobs)
 const booksStore = createStore('epubNotesDB', 'booksStore'); 
 
-const BOOK_LIST_KEY = 'epub_library_books'; // localStorage key
+const BOOK_LIST_KEY = 'epub_library_books';
 
 /**
  * مدیریت لیست کتاب‌ها (LocalStorage) و یادداشت‌ها (IndexedDB)
- * این شیء به فضای گلوبال (window) منتقل می‌شود.
+ * تعریف شیء NotesManager در فضای گلوبال (window)
  */
 window.NotesManager = {
     // ------------------- کتاب‌ها (Local Storage) -------------------
