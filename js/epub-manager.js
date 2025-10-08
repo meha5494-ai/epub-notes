@@ -1,56 +1,54 @@
-window.EpubManager = {
-    currentBook: null,
-    currentRendition: null,
-    currentBookId: null,
-    currentNotes: [],
+import { notesManagerInstance } from './notes-manager.js';
 
-    openBook(book){
-        const readerTitle = document.getElementById('reader-title');
-        const bookContainer = document.getElementById('book-container');
-        const loadingOverlay = document.getElementById('loading-overlay');
+const bookContainer = document.getElementById('book-container');
+const loadingOverlay = document.getElementById('loading-overlay');
 
-        readerTitle.textContent = book.title;
+let currentBook = null;
+let currentRendition = null;
+
+export const EpubManager = {
+    loadEpub: async (id, file, title) => {
+        loadingOverlay.style.display = 'flex';
         bookContainer.innerHTML = '';
-        loadingOverlay.style.display='flex';
-
-        this.currentBook = new ePub(book.file);
-        this.currentRendition = this.currentBook.renderTo('book-container',{
-            width:'100%', height:'100%', method:'scrolled-doc'
-        });
-
-        this.currentRendition.display().then(()=>{
-            loadingOverlay.style.display='none';
-            this.setupSelection();
-        });
+        try {
+            currentBook = ePub(file);
+            currentRendition = currentBook.renderTo('book-container', {
+                width: '100%',
+                height: '100%',
+                method: 'scrolled-doc',
+                manager: 'default',
+                flow: 'scrolled-doc'
+            });
+            await currentRendition.display();
+            loadingOverlay.style.display = 'none';
+            return currentRendition;
+        } catch (e) {
+            console.error('Error loading EPUB', e);
+            loadingOverlay.innerHTML = `
+                <div class="error-message">
+                    <p>خطا در بارگذاری کتاب</p>
+                    <button onclick="location.reload()">تلاش مجدد</button>
+                </div>`;
+            return null;
+        }
     },
 
-    setupSelection(){
-        if(!this.currentRendition) return;
-        const addNotePopover = document.getElementById('add-note-popover');
-        const noteText = document.getElementById('note-text');
-        const saveNoteBtn = document.getElementById('save-note');
-
-        this.currentRendition.on('selected', (cfiRange, contents)=>{
-            const text = this.currentRendition.getRange(cfiRange).toString().trim();
-            if(text.length>0){
-                addNotePopover.classList.add('visible');
-                noteText.value = '';
-                noteText.focus();
-
-                saveNoteBtn.onclick = ()=>{
-                    window.NotesManager.add(noteText.value);
-                    this.currentNotes.push({cfiRange, text:noteText.value});
-                    this.highlightNotes();
-                    addNotePopover.classList.remove('visible');
-                    renderNotes();
-                };
-            }
-        });
-    },
-
-    highlightNotes(){
-        this.currentNotes.forEach(note=>{
-            this.currentRendition.annotations.highlight(note.cfiRange,{fill:'yellow',opacity:0.3},()=>{},"highlight-note");
-        });
+    extractBookMetadata: async (file) => {
+        const book = ePub(file);
+        const bookId = `book_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await book.opened;
+        let coverData = null;
+        try {
+            coverData = await book.coverUrl();
+        } catch (e) {
+            console.warn('No cover found', e);
+        }
+        return {
+            id: bookId,
+            title: file.name.replace('.epub', ''),
+            author: 'ناشناس',
+            cover: coverData,
+            epubFile: file
+        };
     }
 };
