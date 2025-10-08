@@ -1,7 +1,8 @@
 // js/main.js
 
-import { NotesManager } from './notes-manager.js';
-import { EpubManager } from './epub-manager.js';
+// دسترسی به کلاس‌ها و توابع از فضای گلوبال
+const NotesManager = window.NotesManager;
+const EpubManager = window.EpubManager;
 
 // DOM Elements
 const libraryView = document.getElementById('library-view');
@@ -50,7 +51,6 @@ loadTheme();
 // Library View Functions
 // ====================================================================
 
-// نمایش کتاب‌ها در گرید
 const renderBooks = () => {
     books = NotesManager.getBooks();
     bookGrid.innerHTML = '';
@@ -65,13 +65,13 @@ const renderBooks = () => {
         const card = document.createElement('div');
         card.className = 'book-card';
         card.setAttribute('data-id', book.id);
-        card.onclick = () => openBook(book.id);
+        // استفاده از تابع محلی (Closure) برای اطمینان از دسترسی به ID صحیح
+        card.onclick = () => openBook(book.id); 
 
         let coverContent;
         if (book.cover) {
             coverContent = `<img src="${book.cover}" alt="جلد کتاب" class="book-cover">`;
         } else {
-            // Placeholder text cover
             coverContent = `<div class="book-cover-text">${book.title.substring(0, 15)}...</div>`;
         }
 
@@ -95,18 +95,15 @@ uploadButton.addEventListener('click', () => {
 
 fileInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
-    if (file && file.type === 'application/epub+zip' || file.name.endsWith('.epub')) {
+    if (file && (file.type === 'application/epub+zip' || file.name.endsWith('.epub'))) {
         try {
             uploadButton.disabled = true;
             uploadButton.textContent = 'در حال پردازش...';
 
-            // 1. Extract metadata (title, cover)
             const bookData = await EpubManager.extractBookMetadata(file);
             
-            // 2. Save metadata (localStorage) and EPUB file (IndexedDB)
             await NotesManager.addBook(bookData, file);
             
-            // 3. Update UI
             renderBooks();
             console.log(`Book "${bookData.title}" added successfully.`);
             
@@ -116,7 +113,7 @@ fileInput.addEventListener('change', async (event) => {
         } finally {
             uploadButton.textContent = 'افزودن کتاب';
             uploadButton.disabled = false;
-            fileInput.value = ''; // Reset input
+            fileInput.value = ''; 
         }
     } else {
         alert('لطفا یک فایل معتبر EPUB (.epub) انتخاب کنید.');
@@ -135,7 +132,6 @@ const openBook = async (bookId) => {
         return;
     }
     
-    // 1. Get the EPUB file (Blob) from IndexedDB
     const epubFile = await NotesManager.getEpubFile(bookId);
 
     if (!epubFile) {
@@ -143,19 +139,15 @@ const openBook = async (bookId) => {
         return;
     }
 
-    // 2. Load the book into the reader
     await EpubManager.loadEpub(bookId, epubFile, currentBookMetadata.title);
 
-    // 3. Switch views
     libraryView.classList.remove('active');
     readerView.classList.add('active');
     
-    // 4. Update Notes Sheet for the new book
     await renderNotesList(bookId);
 };
 
 backButton.addEventListener('click', () => {
-    // Clear selection, hide popover/sheet, and switch views
     EpubManager.clearSelection();
     EpubManager.hideNotesSheet();
     readerView.classList.remove('active');
@@ -178,7 +170,6 @@ const renderNotesList = async (bookId) => {
     }
     noNotesMessage.style.display = 'none';
 
-    // Sort by timestamp (newest first)
     notes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     notes.forEach(note => {
@@ -186,7 +177,6 @@ const renderNotesList = async (bookId) => {
         item.className = 'note-item';
         item.setAttribute('data-note-id', note.id);
         
-        // Format date in Persian
         const date = new Date(note.timestamp).toLocaleDateString('fa-IR', {
              year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
         });
@@ -197,7 +187,6 @@ const renderNotesList = async (bookId) => {
             <div class="note-date">${date}</div>
         `;
         
-        // Add click listener to navigate to the note's location
         item.addEventListener('click', () => {
             const rendition = EpubManager.getCurrentRendition();
             if (rendition && note.cfiRange) {
@@ -210,7 +199,6 @@ const renderNotesList = async (bookId) => {
     });
 };
 
-// Toggle Notes Sheet
 toggleNotesButton.addEventListener('click', async () => {
     if (notesSheet.classList.contains('visible')) {
         EpubManager.hideNotesSheet();
@@ -229,28 +217,23 @@ closeNotesSheetButton.addEventListener('click', EpubManager.hideNotesSheet);
 // Popover (Add Note) Handlers
 saveNoteButton.addEventListener('click', async () => {
     const noteText = noteTextInput.value.trim();
-    const cfiRange = window.currentCfiRange; // Accessing temporary globals from epub-manager scope
-    const contextText = window.currentContextText;
+    
+    const { cfiRange, contextText } = EpubManager.getCurrentNoteData();
     const bookId = EpubManager.getCurrentBookId();
     
     if (noteText && bookId && cfiRange && contextText) {
         await NotesManager.saveNote(bookId, cfiRange, noteText, contextText);
         
-        // Re-render notes list if sheet is open
         if (notesSheet.classList.contains('visible')) {
             await renderNotesList(bookId);
         }
         
-        // Re-highlight in the book
         const rendition = EpubManager.getCurrentRendition();
         if (rendition) {
             rendition.annotations.highlight(cfiRange, { 'fill': 'yellow', 'opacity': '0.3' }, () => EpubManager.showNotesSheet(), 'epub-note-highlight');
         }
         
-        // Clean up
-        EpubManager.clearSelection(); // This also hides the popover
-        window.currentCfiRange = null;
-        window.currentContextText = null;
+        EpubManager.clearSelection();
     } else {
         alert('لطفا متن یادداشت را وارد کنید.');
     }
@@ -258,45 +241,7 @@ saveNoteButton.addEventListener('click', async () => {
 
 cancelNoteButton.addEventListener('click', () => {
     EpubManager.clearSelection();
-    window.currentCfiRange = null;
-    window.currentContextText = null;
 });
-
-// For simplicity in sharing data between modules without explicit exports/imports
-// We attach the popover functions to the window object's scope.
-window.showAddNotePopover = (cfiRange, contextText, contents) => {
-    // Position Popover in epub-manager logic
-    const iframeRect = contents.iframe.getBoundingClientRect();
-    const selection = contents.window.getSelection();
-    
-    if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        
-        const posX = iframeRect.left + rect.left + (rect.width / 2);
-        const posY = iframeRect.top + rect.bottom;
-        
-        popover.style.left = '50%';
-        popover.style.transform = 'translate(-50%, -50%)';
-        popover.style.top = `${posY + 20}px`;
-        
-        if (posY + popover.offsetHeight > window.innerHeight) {
-            popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
-        }
-    }
-    
-    popover.classList.add('visible');
-    noteTextInput.value = '';
-    noteTextInput.focus();
-    
-    window.currentCfiRange = cfiRange;
-    window.currentContextText = contextText;
-};
-window.hideAddNotePopover = () => {
-    popover.classList.remove('visible');
-    window.currentCfiRange = null;
-    window.currentContextText = null;
-};
 
 
 // Initialize the application
