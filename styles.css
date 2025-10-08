@@ -136,16 +136,18 @@ body.sepia {
 .book-title-container {
     flex: 1;
     text-align: center;
-    margin: 0 12px;
+    margin: 0 8px;
+    min-width: 0;
 }
 
 .book-title-container h2 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 200px;
 }
 
 .header-actions-mobile {
@@ -157,8 +159,8 @@ body.sepia {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--primary);
-    color: white;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary);
     border: none;
     display: flex;
     align-items: center;
@@ -166,10 +168,11 @@ body.sepia {
     cursor: pointer;
     transition: var(--transition);
     font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-btn:hover {
-    background: var(--primary-dark);
+    background: white;
     transform: scale(1.1);
 }
 
@@ -964,6 +967,7 @@ body.sepia {
     
     .book-title-container h2 {
         font-size: 1.2rem;
+        max-width: 300px;
     }
     
     .mobile-btn {
@@ -1047,5 +1051,19 @@ body.sepia {
     
     .mindmap-panel {
         width: 100%;
+    }
+    
+    .book-title-container {
+        margin: 0 4px;
+    }
+    
+    .book-title-container h2 {
+        max-width: 150px;
+        font-size: 0.8rem;
+    }
+    
+    .mobile-btn {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 }
