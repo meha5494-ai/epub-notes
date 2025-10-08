@@ -1,78 +1,71 @@
-// js/main.js
 import { notesManagerInstance } from './notes-manager.js';
 import { EpubManager } from './epub-manager.js';
 
-// DOM Elements
 const fileInput = document.getElementById('epub-file-input');
 const uploadButton = document.getElementById('upload-button');
 const backButton = document.getElementById('back-to-library');
-const toggleNotesButton = document.getElementById('toggle-notes');
-const closeNotesButton = document.getElementById('close-notes-sheet');
-const themeToggleButton = document.getElementById('theme-toggle');
-const themeIcon = document.getElementById('theme-icon');
 const libraryView = document.getElementById('library-view');
 const readerView = document.getElementById('reader-view');
+const themeToggle = document.getElementById('theme-toggle');
 
-// حالت تم پیش‌فرض
-let darkMode = false;
+let isDark = false;
 
-// -----------------------
-// Toggle Dark/Light Theme
-// -----------------------
-themeToggleButton.addEventListener('click', () => {
-    darkMode = !darkMode;
-    document.body.classList.toggle('dark-theme', darkMode);
-    themeIcon.textContent = darkMode ? '☀️' : '🌙';
+// تم روشن/تیره
+themeToggle.addEventListener('click', () => {
+    isDark = !isDark;
+    document.body.classList.toggle('dark-theme', isDark);
+    document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
 });
 
-// -----------------------
-// Upload EPUB File
-// -----------------------
+// افزودن کتاب
 uploadButton.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const bookData = await EpubManager.extractBookMetadata(file);
+    const metadata = await EpubManager.extractBookMetadata(file);
+    await EpubManager.loadEpub(metadata.id, file, metadata.title);
 
-    await EpubManager.loadEpub(bookData.id, file, bookData.title);
-
-    // نمایش نما کتابخوان و مخفی کردن کتابخانه
-    libraryView.classList.remove('active');
-    readerView.classList.add('active');
+    // اضافه کردن کتاب به گرید
+    const grid = document.getElementById('book-grid');
+    const card = document.createElement('div');
+    card.classList.add('book-card');
+    card.textContent = metadata.title;
+    card.addEventListener('click', async () => {
+        libraryView.classList.remove('active');
+        readerView.classList.add('active');
+        await EpubManager.loadEpub(metadata.id, file, metadata.title);
+    });
+    grid.appendChild(card);
 });
 
-// -----------------------
-// Navigation Buttons
-// -----------------------
+// بازگشت به کتابخانه
 backButton.addEventListener('click', () => {
     readerView.classList.remove('active');
     libraryView.classList.add('active');
 });
 
-toggleNotesButton.addEventListener('click', () => EpubManager.showNotesSheet());
-closeNotesButton.addEventListener('click', () => EpubManager.hideNotesSheet());
+// Notes Sheet
+document.getElementById('toggle-notes').addEventListener('click', () => EpubManager.showNotesSheet());
+document.getElementById('close-notes-sheet').addEventListener('click', () => EpubManager.hideNotesSheet());
 
-// -----------------------
-// Optional: Cancel/Save Note Buttons
-// -----------------------
-const cancelNoteBtn = document.getElementById('cancel-note');
-const saveNoteBtn = document.getElementById('save-note');
-const noteTextInput = document.getElementById('note-text-input');
-
-cancelNoteBtn.addEventListener('click', () => EpubManager.hideAddNotePopover());
-
-saveNoteBtn.addEventListener('click', () => {
-    const noteText = noteTextInput.value.trim();
-    if (noteText.length === 0) return;
-    const noteData = EpubManager.getCurrentNoteData();
-    notesManagerInstance.addNote({
-        text: noteText,
-        bookId: noteData.cfiRange ? EpubManager.getCurrentBookId() : null,
-        cfiRange: noteData.cfiRange,
-        context: noteData.contextText
+// Chrome Extension Listener (async safe)
+if (chrome && chrome.runtime) {
+    chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+        try {
+            if (!message || !message.action) return sendResponse({ success: false, error: 'Invalid message' });
+            if (message.action === 'getNotes') {
+                const notes = notesManagerInstance.getNotes();
+                sendResponse({ success: true, notes });
+            } else if (message.action === 'addNote') {
+                if (message.note) notesManagerInstance.addNote(message.note);
+                sendResponse({ success: true });
+            } else if (message.action === 'removeNote') {
+                if (typeof message.index === 'number') notesManagerInstance.removeNote(message.index);
+                sendResponse({ success: true });
+            } else sendResponse({ success: false, error: 'Unknown action' });
+        } catch (err) { sendResponse({ success: false, error: err.message }); }
+        return true;
     });
-    EpubManager.hideAddNotePopover();
-    EpubManager.showNotesSheet();
-});
+}
