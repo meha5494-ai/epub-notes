@@ -1,4 +1,4 @@
-// notesManager.js
+// js/notes-manager.js
 export class NotesManager {
     constructor() {
         this.notes = [];
@@ -21,5 +21,5 @@ export class NotesManager {
     }
 }
 
-// یک نمونه یکتا که می‌توان import کرد
+// نمونه یکتا برای استفاده در پروژه
 export const notesManagerInstance = new NotesManager();
