@@ -1,43 +1,57 @@
 class EpubManager {
   constructor() {
-    this.currentBook = null;
+    this.book = null;
     this.rendition = null;
+    this.currentBookId = null;
+    console.log("📚 EpubManager آماده است");
   }
 
-  async loadBook(file, title) {
-    const arrayBuffer = await file.arrayBuffer();
-    const book = ePub(arrayBuffer);
-    this.currentBook = book;
+  async loadBookFromData(bookData, bookId) {
+    try {
+      console.log("در حال باز کردن کتاب...");
+      this.book = ePub(bookData);
+      this.currentBookId = bookId;
 
-    const viewer = document.getElementById("viewer");
-    viewer.innerHTML = "";
+      const viewer = document.getElementById("viewer");
+      viewer.innerHTML = "";
 
-    this.rendition = book.renderTo(viewer, {
-      width: "100%",
-      height: "100%",
-      spread: "none",
-      flow: "paginated"
-    });
+      this.rendition = this.book.renderTo(viewer, {
+        width: "100%",
+        height: "100%",
+        spread: "none",
+        flow: "paginated"
+      });
 
-    await this.rendition.display();
-    this.rendition.on("selected", this.handleSelection.bind(this));
+      await this.rendition.display();
+      console.log("✅ کتاب با موفقیت نمایش داده شد");
 
-    // ذخیره در IndexedDB
-    await idbKeyval.set(`book_${title}`, arrayBuffer);
-    window.loadBookList();
-  }
+      // فعال‌سازی انتخاب متن
+      this.enableTextSelection();
 
-  handleSelection(cfiRange, contents) {
-    const text = contents.window.getSelection().toString();
-    if (text.trim()) {
-      window.dispatchEvent(new CustomEvent("text-selected", {
-        detail: { cfiRange, text }
-      }));
+    } catch (error) {
+      console.error("❌ خطا در باز کردن کتاب:", error);
+      alert("خطا در بارگذاری کتاب");
     }
   }
 
-  highlightText(cfiRange, color = "#fde047") {
-    this.rendition.annotations.add("highlight", cfiRange, { fill: color });
+  enableTextSelection() {
+    if (!this.rendition) return;
+
+    this.rendition.on("selected", (cfiRange, contents) => {
+      const selectedText = contents.window.getSelection().toString();
+      if (selectedText.trim()) {
+        console.log("📄 متن انتخاب شد:", selectedText);
+        window.dispatchEvent(new CustomEvent("text-selected", {
+          detail: { cfiRange, text: selectedText }
+        }));
+      }
+      this.rendition.annotations.remove(cfiRange, "highlight");
+    });
+  }
+
+  highlightText(cfiRange, color = "#ffeb3b") {
+    if (!this.rendition) return;
+    this.rendition.annotations.add("highlight", cfiRange, {}, null, { fill: color, "fill-opacity": "0.4" });
   }
 }
 
