@@ -10,48 +10,57 @@ const EpubManager = {
         bookContainer.innerHTML = '';
         
         try {
-            // ایجاد یک div برای محتوای کتاب
+            // ایجاد یک div با اندازه مشخص برای محتوای کتاب
             const contentDiv = document.createElement('div');
+            contentDiv.id = 'epub-content';
             contentDiv.style.width = '100%';
             contentDiv.style.height = '100%';
-            contentDiv.style.minHeight = '500px';
+            contentDiv.style.minHeight = '70vh';
+            contentDiv.style.position = 'relative';
             bookContainer.appendChild(contentDiv);
             
             currentBook = ePub(file);
             
-            // اطمینان از اینکه کتاب به درستی باز شده
+            // صبر برای آماده شدن کتاب
             await currentBook.ready;
             
+            // تنظیمات رندر با روش متفاوت
             currentRendition = currentBook.renderTo(contentDiv, {
                 width: '100%',
                 height: '100%',
-                method: 'continuous',
-                flow: 'scrolled',
+                spread: 'none',
+                flow: 'scrolled-doc',
                 manager: 'continuous'
             });
             
-            // اضافه کردن رویداد برای اطمینان از بارگذاری کامل
+            // رویداد برای اطمینان از بارگذاری کامل
+            let sectionsLoaded = 0;
             currentRendition.on('rendered', (section) => {
-                console.log('Section rendered:', section);
-                // پنهان کردن لودینگ بعد از رندر اولین بخش
-                if (loadingOverlay.style.display === 'flex') {
+                sectionsLoaded++;
+                console.log(`Section ${sectionsLoaded} rendered`);
+                
+                // بعد از رندر شدن اولین بخش، لودینگ را پنهان کن
+                if (sectionsLoaded === 1) {
                     setTimeout(() => {
                         loadingOverlay.style.display = 'none';
-                    }, 500);
+                    }, 300);
                 }
             });
             
-            currentRendition.on('relocated', (location) => {
-                console.log('Book relocated to:', location);
-            });
-            
+            // تلاش برای نمایش کتاب
             await currentRendition.display();
             
-            // تنظیم مجدد اندازه پس از نمایش
+            // تنظیم مجدد اندازه بعد از نمایش
             setTimeout(() => {
-                currentRendition.resize();
-                window.dispatchEvent(new Event('resize'));
-            }, 200);
+                if (currentRendition) {
+                    currentRendition.resize();
+                }
+                
+                // اگر لودینگ هنوز نمایش داده می‌شود، آن را پنهان کن
+                if (loadingOverlay.style.display === 'flex') {
+                    loadingOverlay.style.display = 'none';
+                }
+            }, 1000);
             
             return currentRendition;
         } catch (e) {
