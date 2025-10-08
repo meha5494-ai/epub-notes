@@ -18,8 +18,7 @@ const toggleNotesButton = document.getElementById('toggle-notes');
 const notesSheet = document.getElementById('notes-sheet');
 const closeNotesSheetButton = document.getElementById('close-notes-sheet');
 const notesList = document.getElementById('notes-list');
-const noNotesMessage = document.getElementById('no-notes-message');
-const popover = document.getElementById('add-note-popover');
+// const noNotesMessage = document.getElementById('no-notes-message'); // استفاده شده در renderNotesList
 const saveNoteButton = document.getElementById('save-note');
 const cancelNoteButton = document.getElementById('cancel-note');
 const noteTextInput = document.getElementById('note-text-input');
@@ -65,8 +64,8 @@ const renderBooks = () => {
         const card = document.createElement('div');
         card.className = 'book-card';
         card.setAttribute('data-id', book.id);
-        // استفاده از تابع محلی (Closure) برای اطمینان از دسترسی به ID صحیح
-        card.onclick = () => openBook(book.id); 
+        // استفاده از یک تابع محلی با دسترسی به book.id برای تضمین عملکرد کلیک
+        card.addEventListener('click', () => openBook(book.id)); 
 
         let coverContent;
         if (book.cover) {
@@ -105,7 +104,6 @@ fileInput.addEventListener('change', async (event) => {
             await NotesManager.addBook(bookData, file);
             
             renderBooks();
-            console.log(`Book "${bookData.title}" added successfully.`);
             
         } catch (error) {
             alert('خطا در آپلود و پردازش فایل EPUB. لطفا فایل دیگری را امتحان کنید.');
@@ -153,6 +151,8 @@ backButton.addEventListener('click', () => {
     readerView.classList.remove('active');
     libraryView.classList.add('active');
     currentBookMetadata = null;
+    // هنگام برگشت به کتابخانه، لیست را مجددا رندر می‌کنیم
+    renderBooks(); 
 });
 
 
@@ -161,6 +161,7 @@ backButton.addEventListener('click', () => {
 // ====================================================================
 
 const renderNotesList = async (bookId) => {
+    const noNotesMessage = document.getElementById('no-notes-message');
     const notes = await NotesManager.getNotes(bookId);
     notesList.innerHTML = '';
     
@@ -218,16 +219,19 @@ closeNotesSheetButton.addEventListener('click', EpubManager.hideNotesSheet);
 saveNoteButton.addEventListener('click', async () => {
     const noteText = noteTextInput.value.trim();
     
+    // دریافت داده‌های یادداشت از EpubManager
     const { cfiRange, contextText } = EpubManager.getCurrentNoteData();
     const bookId = EpubManager.getCurrentBookId();
     
     if (noteText && bookId && cfiRange && contextText) {
         await NotesManager.saveNote(bookId, cfiRange, noteText, contextText);
         
+        // اگر پنل یادداشت‌ها باز است، آن را به‌روزرسانی کنید.
         if (notesSheet.classList.contains('visible')) {
             await renderNotesList(bookId);
         }
         
+        // هایلایت مجدد در کتاب
         const rendition = EpubManager.getCurrentRendition();
         if (rendition) {
             rendition.annotations.highlight(cfiRange, { 'fill': 'yellow', 'opacity': '0.3' }, () => EpubManager.showNotesSheet(), 'epub-note-highlight');
