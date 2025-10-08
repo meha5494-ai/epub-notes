@@ -30,12 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // بررسی و بازیابی کتاب در حال خواندن پس از رفرش
     const currentBookId = sessionStorage.getItem('currentBookId');
-    if (currentBookId && readerView.classList.contains('active')) {
+    const isReaderViewActive = sessionStorage.getItem('isReaderViewActive') === 'true';
+    
+    if (currentBookId && isReaderViewActive) {
         const book = books.find(b => b.id === currentBookId);
         if (book) {
+            // تأخیر برای اطمینان از بارگذاری کامل صفحه
             setTimeout(() => {
                 openBook(book);
-            }, 100);
+            }, 500);
         }
     }
 
@@ -51,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             readerView.classList.remove('active');
             libraryView.classList.add('active');
+            sessionStorage.setItem('isReaderViewActive', 'false');
         });
     }
 
@@ -184,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Opening book:', book.title);
         window.currentBookId = book.id; // ذخیره ID کتاب فعلی
         sessionStorage.setItem('currentBookId', book.id); // ذخیره در sessionStorage برای رفرش
+        sessionStorage.setItem('isReaderViewActive', 'true'); // ذخیره وضعیت صفحه خواندن
         libraryView.classList.remove('active');
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
