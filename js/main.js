@@ -18,15 +18,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let books = [];
 
-    // اطمینان از وجود دکمه بازگشت و افزودن رویداد کلیک
+    // بررسی و اضافه کردن رویداد به دکمه بازگشت
+    console.log('Back button element:', backBtn);
     if (backBtn) {
-        backBtn.addEventListener('click', () => {
+        backBtn.addEventListener('click', function() {
             console.log('Back button clicked');
             readerView.classList.remove('active');
             libraryView.classList.add('active');
         });
+        console.log('Back button event listener added');
     } else {
-        console.error('Back button not found');
+        console.error('Back button not found in DOM');
     }
 
     uploadBtn.addEventListener('click', () => fileInput.click());
@@ -88,23 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
         
-        // تاخیر برای اطمینان از نمایش کامل view
+        // نمایش لودینگ
+        loadingOverlay.style.display = 'flex';
+        
+        // تاخیر کوتاه قبل از بارگذاری کتاب
         setTimeout(async () => {
             try {
-                // نمایش لودینگ
-                loadingOverlay.style.display = 'flex';
-                
-                // بارگذاری کتاب
+                console.log('Loading book...');
                 await window.EpubManager.loadEpub(book.id, book.file, book.title);
-                
-                // اطمینان از پنهان شدن لودینگ بعد از 5 ثانیه (حتی اگر کتاب بارگذاری نشود)
-                setTimeout(() => {
-                    loadingOverlay.style.display = 'none';
-                }, 5000);
-                
+                console.log('Book loaded successfully');
             } catch (error) {
                 console.error('Error opening book:', error);
-                // پنهان کردن لودینگ در صورت خطا
                 loadingOverlay.style.display = 'none';
                 
                 // نمایش پیام خطا
@@ -122,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             }
-        }, 500);
+        }, 300);
         
         window.NotesManager.clear();
         renderNotes();
