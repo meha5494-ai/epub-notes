@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeNotesBtn = document.getElementById('close-notes');
     const addNotePopover = document.getElementById('add-note-popover');
     const cancelNoteBtn = document.getElementById('cancel-note');
+    const saveNoteBtn = document.getElementById('save-note');
+    const noteText = document.getElementById('note-text');
+    const addNoteBtn = document.getElementById('add-note-btn');
 
     let books = [];
 
@@ -27,9 +30,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderLibrary() {
         bookGrid.innerHTML = '';
         if (books.length === 0) {
-            bookGrid.innerHTML = '<p>کتابخانه شما خالی است 📚</p>';
+            bookGrid.innerHTML = `
+                <div class="empty-state">
+                    <span class="material-icons empty-icon">auto_stories</span>
+                    <p>کتابخانه شما خالی است</p>
+                    <button class="mdc-button mdc-button--outlined" onclick="document.getElementById('upload-button').click()">
+                        افزودن کتاب
+                    </button>
+                </div>`;
             return;
         }
+        
         books.forEach(book => {
             const div = document.createElement('div');
             div.className = 'book-card';
@@ -60,9 +71,12 @@ document.addEventListener('DOMContentLoaded', function() {
         libraryView.classList.remove('active');
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
+        
+        // اطمینان از نمایش کامل view قبل از بارگذاری کتاب
         setTimeout(async () => {
             await window.EpubManager.loadEpub(book.id, book.file, book.title);
-        }, 100);
+        }, 300);
+        
         window.NotesManager.clear();
         renderNotes();
     }
@@ -72,29 +86,75 @@ document.addEventListener('DOMContentLoaded', function() {
         const noNotesMsg = document.getElementById('no-notes-message');
         notesList.innerHTML = '';
         const notes = window.NotesManager.getAll();
+        
         if (notes.length === 0) {
-            noNotesMsg.style.display = 'block';
+            noNotesMsg.style.display = 'flex';
             return;
         }
+        
         noNotesMsg.style.display = 'none';
-        notes.forEach(note => {
+        notes.forEach((note, index) => {
             const div = document.createElement('div');
             div.className = 'note-item';
-            div.textContent = note;
+            div.innerHTML = `
+                <div class="note-content">${note}</div>
+                <button class="mdc-icon-button delete-note" data-index="${index}">
+                    <span class="material-icons">delete</span>
+                </button>
+            `;
             notesList.appendChild(div);
+        });
+        
+        // افزودن رویداد حذف یادداشت
+        document.querySelectorAll('.delete-note').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.currentTarget.dataset.index);
+                window.NotesManager.delete(index);
+                renderNotes();
+            });
         });
     }
 
+    // دکمه بازگشت به کتابخانه
     backBtn.addEventListener('click', () => {
         readerView.classList.remove('active');
         libraryView.classList.add('active');
     });
 
-    toggleNotesBtn.addEventListener('click', () => notesSheet.classList.toggle('visible'));
-    closeNotesBtn.addEventListener('click', () => notesSheet.classList.remove('visible'));
-    cancelNoteBtn.addEventListener('click', () => addNotePopover.classList.remove('visible'));
+    toggleNotesBtn.addEventListener('click', () => {
+        notesSheet.classList.toggle('visible');
+        renderNotes();
+    });
+
+    closeNotesBtn.addEventListener('click', () => {
+        notesSheet.classList.remove('visible');
+    });
+
+    // دکمه افزودن یادداشت جدید
+    addNoteBtn.addEventListener('click', () => {
+        addNotePopover.classList.add('visible');
+        noteText.focus();
+    });
+
+    cancelNoteBtn.addEventListener('click', () => {
+        addNotePopover.classList.remove('visible');
+        noteText.value = '';
+    });
+
+    saveNoteBtn.addEventListener('click', () => {
+        const note = noteText.value.trim();
+        if (note) {
+            window.NotesManager.add(note);
+            renderNotes();
+            addNotePopover.classList.remove('visible');
+            noteText.value = '';
+        }
+    });
 
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark');
     });
+
+    // نمایش اولیه کتابخانه
+    renderLibrary();
 });
