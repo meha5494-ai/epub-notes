@@ -88,6 +88,80 @@ body.dark {
     gap: 12px;
 }
 
+/* Reader Header Styles */
+.reader-header {
+    background: var(--surface);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.reader-header .back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.reader-header .back-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
+.book-title-container {
+    flex: 1;
+    text-align: center;
+    margin: 0 12px;
+}
+
+.book-title-container h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-actions-mobile {
+    display: flex;
+    gap: 8px;
+}
+
+.mobile-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.mobile-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
 /* Button Styles */
 .primary-btn {
     background: white;
@@ -211,6 +285,7 @@ body.dark {
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
 }
 
 .book-card:hover {
@@ -244,24 +319,14 @@ body.dark {
     color: var(--text);
 }
 
-/* Reader View */
-.reader-header {
-    background: var(--surface);
-    padding: 16px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.back-btn {
-    width: 44px;
-    height: 44px;
+.delete-book-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: var(--primary);
+    background: rgba(236, 72, 153, 0.9);
     color: white;
     border: none;
     display: flex;
@@ -269,36 +334,25 @@ body.dark {
     justify-content: center;
     cursor: pointer;
     transition: var(--transition);
-    font-size: 1.2rem;
-    box-shadow: var(--shadow);
-    z-index: 101;
+    opacity: 0;
+    z-index: 10;
 }
 
-.back-btn:hover {
-    background: var(--primary-dark);
+.book-card:hover .delete-book-btn {
+    opacity: 1;
+}
+
+.delete-book-btn:hover {
+    background: var(--accent);
     transform: scale(1.1);
 }
 
-.book-title-container {
-    flex: 1;
-    text-align: center;
-    margin: 0 16px;
-}
-
-.book-title-container h2 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
+/* Reader Container */
 .reader-container {
-    padding: 20px;
-    max-width: 900px;
+    padding: 16px;
+    max-width: 100%;
     margin: 0 auto;
-    height: calc(100vh - 200px);
+    height: calc(100vh - 180px);
     display: flex;
     flex-direction: column;
 }
@@ -306,8 +360,8 @@ body.dark {
 /* Progress Container */
 .progress-container {
     width: 100%;
-    padding: 0 20px;
-    margin-bottom: 20px;
+    padding: 0 16px;
+    margin-bottom: 16px;
 }
 
 .progress-bar {
@@ -315,7 +369,8 @@ body.dark {
     background: var(--surface-alt);
     border-radius: 4px;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    position: relative;
 }
 
 .progress-fill {
@@ -323,17 +378,38 @@ body.dark {
     background: linear-gradient(90deg, var(--primary), var(--secondary));
     border-radius: 4px;
     transition: width 0.3s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .progress-text {
-    text-align: center;
     font-size: 0.9rem;
     color: var(--text-light);
-    margin-bottom: 8px;
+    font-weight: 500;
 }
 
 .page-info {
-    text-align: center;
     font-size: 0.9rem;
     color: var(--text);
     font-weight: 500;
@@ -344,7 +420,7 @@ body.dark {
     display: flex;
     justify-content: center;
     gap: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .view-btn {
@@ -426,7 +502,7 @@ body.dark {
     color: #1e293b;
 }
 
-/* Page Navigation */
+/* Page Navigation (فقط در دسکتاپ) */
 .page-navigation {
     position: fixed;
     bottom: 20px;
@@ -868,6 +944,54 @@ body.dark {
     fill: var(--text);
 }
 
+/* Desktop Only Elements */
+.desktop-only {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .desktop-only {
+        display: block;
+    }
+    
+    .reader-header {
+        padding: 16px 20px;
+    }
+    
+    .reader-header .back-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+    
+    .book-title-container h2 {
+        font-size: 1.2rem;
+    }
+    
+    .mobile-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+    
+    .header-actions-mobile {
+        display: none;
+    }
+    
+    .reader-container {
+        padding: 20px;
+        height: calc(100vh - 200px);
+    }
+    
+    #book-container {
+        padding: 20px;
+    }
+    
+    #epub-content {
+        height: 600px;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .app-header h1 {
@@ -893,21 +1017,25 @@ body.dark {
     }
     
     .reader-container {
-        padding: 16px;
+        padding: 12px;
+        height: calc(100vh - 160px);
     }
     
     #book-container {
-        padding: 16px;
+        padding: 12px;
     }
     
     #epub-content {
         height: 500px;
     }
     
-    .back-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
+    .progress-container {
+        padding: 0 12px;
+        margin-bottom: 12px;
+    }
+    
+    .view-controls {
+        margin-bottom: 12px;
     }
     
     .page-navigation {
