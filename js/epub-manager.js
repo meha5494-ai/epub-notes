@@ -1,37 +1,28 @@
 // js/epub-manager.js
+import { notesManagerInstance } from './notes-manager.js';
 
-// دسترسی به NoteManager از فضای گلوبال
-const NotesManager = window.NotesManager;
-
-// DOM Elements (دسترسی مستقیم، زیرا در زمان بارگذاری موجود هستند)
+// DOM Elements
 const bookContainer = document.getElementById('book-container');
 const loadingOverlay = document.getElementById('loading-overlay');
 const popover = document.getElementById('add-note-popover');
 const notesSheet = document.getElementById('notes-sheet');
 const noteTextInput = document.getElementById('note-text-input');
 
-// Global variables for EPUB state (Local to this script)
+// Local variables for EPUB state
 let currentBook = null;
 let currentRendition = null;
 let currentBookId = null;
-let currentCfiRange = null;     // متغیرهای وضعیت پاپ‌اوور
-let currentContextText = null;  // متغیرهای وضعیت پاپ‌اوور
+let currentCfiRange = null;
+let currentContextText = null;
 
-
-/**
- * مدیریت خواندن EPUB (epub.js)
- * تعریف شیء EpubManager در فضای گلوبال (window)
- */
-window.EpubManager = {
+export const EpubManager = {
     loadEpub: async (bookId, epubFile, bookTitle) => {
         currentBookId = bookId;
-        
         document.getElementById('reader-title').textContent = bookTitle;
         loadingOverlay.classList.remove('hidden');
-        bookContainer.innerHTML = ''; 
+        bookContainer.innerHTML = '';
 
         try {
-            // ePub یک تابع گلوبال است که توسط CDN فراهم شده
             currentBook = new ePub(epubFile);
 
             currentRendition = currentBook.renderTo('book-container', {
@@ -55,8 +46,7 @@ window.EpubManager = {
 
             loadingOverlay.classList.add('hidden');
 
-            window.EpubManager.setupSelectionHandler();
-            
+            EpubManager.setupSelectionHandler();
             return currentRendition;
 
         } catch (error) {
@@ -67,15 +57,14 @@ window.EpubManager = {
 
     extractBookMetadata: async (file) => {
         const book = new ePub(file);
-        const bookId = file.name + file.size + file.lastModified; 
+        const bookId = file.name + file.size + file.lastModified;
 
         await book.opened;
         const metadata = book.metadata;
-        
+
         let coverDataUrl = null;
         try {
-            const cover = await book.coverUrl();
-            coverDataUrl = cover;
+            coverDataUrl = await book.coverUrl();
         } catch (e) {
             console.warn('Could not extract cover image:', e);
         }
@@ -94,33 +83,30 @@ window.EpubManager = {
 
         currentRendition.on('selected', (cfiRange, contents) => {
             const text = currentRendition.getRange(cfiRange).toString().trim();
-            
             if (text.length > 0) {
-                // نمایش Popover
-                window.EpubManager.showAddNotePopover(cfiRange, text, contents); 
+                EpubManager.showAddNotePopover(cfiRange, text, contents);
             } else {
-                window.EpubManager.clearSelection();
+                EpubManager.clearSelection();
             }
         });
-        
-        // Highlight existing notes
+
         currentRendition.hooks.render.register(async (contents) => {
-            const notes = await NotesManager.getNotes(currentBookId);
+            const notes = await notesManagerInstance.getNotes(currentBookId);
             notes.forEach(note => {
                 if (note.cfiRange) {
-                    currentRendition.annotations.highlight(note.cfiRange, { 'fill': 'yellow', 'opacity': '0.3' }, (e) => {
-                        if (e.target.tagName === 'A') return; 
-                        window.EpubManager.showNotesSheet();
-                    }, 'epub-note-highlight');
+                    currentRendition.annotations.highlight(
+                        note.cfiRange,
+                        { fill: 'yellow', opacity: '0.3' },
+                        (e) => { if (e.target.tagName !== 'A') EpubManager.showNotesSheet(); },
+                        'epub-note-highlight'
+                    );
                 }
             });
         });
 
-        // Add CSS for highlight to iframe
         currentRendition.on('added', (section, view) => {
             const doc = view.document;
             const style = doc.createElement('style');
-            // از CSS Variables اصلی برای تم روشن/تیره استفاده می‌کند
             style.textContent = `
                 .epub-note-highlight {
                     background-color: var(--highlight-color, rgba(0, 122, 255, 0.3)) !important; 
@@ -135,52 +121,41 @@ window.EpubManager = {
             doc.head.appendChild(style);
         });
     },
-    
+
     clearSelection: () => {
         if (currentRendition) {
             currentRendition.getSelection().removeAllRanges();
-            window.EpubManager.hideAddNotePopover();
+            EpubManager.hideAddNotePopover();
         }
     },
-    
-    showNotesSheet: () => {
-        notesSheet.classList.add('visible');
-    },
-    
-    hideNotesSheet: () => {
-        notesSheet.classList.remove('visible');
-    },
+
+    showNotesSheet: () => notesSheet.classList.add('visible'),
+    hideNotesSheet: () => notesSheet.classList.remove('visible'),
 
     getCurrentBookId: () => currentBookId,
     getCurrentRendition: () => currentRendition,
 
-    // ------------------- Popover Management -------------------
-    
     showAddNotePopover: (cfiRange, contextText, contents) => {
         currentCfiRange = cfiRange;
         currentContextText = contextText;
         noteTextInput.value = '';
-        
-        // Logic for positioning Popover
+
         const selection = contents.window.getSelection();
         if (selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             const iframeRect = contents.iframe.getBoundingClientRect();
-            
-            const posX = iframeRect.left + rect.left + (rect.width / 2);
+
             const posY = iframeRect.top + rect.bottom;
-            
             popover.style.left = '50%';
             popover.style.transform = 'translate(-50%, -50%)';
             popover.style.top = `${posY + 20}px`;
-            
-            // If the popover goes off the bottom of the screen, move it above the selection
+
             if (posY + popover.offsetHeight > window.innerHeight) {
                 popover.style.top = `${iframeRect.top + rect.top - popover.offsetHeight - 20}px`;
             }
         }
-        
+
         popover.classList.add('visible');
         noteTextInput.focus();
     },
