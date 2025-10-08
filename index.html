@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>کتابخانه شخصی | EPUB Notes</title>
+    
     <meta name="theme-color" content="#FFFFFF"/>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
+
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -24,7 +30,9 @@
                 </button>
             </div>
         </header>
+
         <input type="file" id="epub-file-input" accept=".epub" style="display: none;">
+
         <div id="book-grid" class="ios-grid">
             <p id="empty-message">کتابخانه‌ی شما خالی است. 📚</p>
         </div>
@@ -42,6 +50,7 @@
                 یادداشت‌ها
             </button>
         </header>
+
         <div id="reader-area" class="reader-content">
             <div id="book-container"></div>
             <div id="loading-overlay" class="loading-overlay">در حال بارگذاری...</div>
@@ -58,7 +67,7 @@
                 </button>
             </div>
             <div id="notes-list" class="notes-list">
-                <p id="no-notes-message">هنوز هیچ یادداشتی ثبت نشده است.</p>
+                <p id="no-notes-message">هنوز هیچ یادداشتی برای این کتاب ثبت نشده است.</p>
             </div>
         </div>
     </div>
@@ -71,8 +80,10 @@
         </div>
     </div>
 
-    <!-- Main JS as module -->
-    <script type="module" src="js/main.js"></script>
+    <!-- Scripts -->
+    <script src="js/notes-manager.js"></script>
+    <script src="js/epub-manager.js"></script>
+    <script src="js/main.js"></script>
 
     <script>
         if ('serviceWorker' in navigator) {
