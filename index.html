@@ -12,6 +12,8 @@
 <!-- کتابخانه‌ها -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-hierarchy@3.1.2/dist/d3-hierarchy.min.js"></script>
 </head>
 <body>
 <div id="library-view" class="view active">
@@ -59,17 +61,18 @@
         </button>
     </div>
     
-    <!-- نوار پیشرفت -->
+    <!-- نوار پیشرفت مطالعه -->
     <div class="progress-container">
         <div class="progress-bar">
             <div class="progress-fill" id="progress-fill"></div>
         </div>
         <div class="progress-text" id="progress-text">0%</div>
+        <div class="page-info" id="page-info">صفحه 0 از 0</div>
     </div>
     
     <!-- دکمه‌های نمایش -->
     <div class="view-controls">
-        <button class="view-btn" id="continuous-view-btn" title="نمایش پیوسته">
+        <button class="view-btn active" id="continuous-view-btn" title="نمایش پیوسته">
             <i class="fas fa-align-justify"></i>
         </button>
         <button class="view-btn" id="paged-view-btn" title="نمایش صفحه به صفحه">
@@ -89,7 +92,7 @@
         <button class="page-nav-btn" id="prev-page-btn">
             <i class="fas fa-chevron-right"></i>
         </button>
-        <span class="page-info" id="page-info">صفحه 1 از 1</span>
+        <span class="page-info-nav" id="page-info-nav">صفحه 1 از 1</span>
         <button class="page-nav-btn" id="next-page-btn">
             <i class="fas fa-chevron-left"></i>
         </button>
@@ -135,11 +138,10 @@
             <i class="fas fa-times"></i>
         </button>
     </div>
-    <div class="mindmap-content">
+    <div class="mindmap-content" id="mindmap-content">
         <div class="mindmap-placeholder">
-            <i class="fas fa-project-diagram"></i>
-            <p>مایند مپ کتاب در اینجا نمایش داده می‌شود</p>
-            <p>این قابلیت در حال توسعه است</p>
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>در حال ساخت مایند مپ...</p>
         </div>
     </div>
 </div>
