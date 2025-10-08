@@ -343,6 +343,32 @@ body.dark {
     overflow: auto;
 }
 
+/* استایل‌های اضافی برای محتوای کتاب */
+#epub-content iframe body {
+    direction: rtl;
+    font-family: 'Vazirmatn', sans-serif;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #1e293b;
+    padding: 20px;
+}
+
+#epub-content iframe p {
+    margin-bottom: 16px;
+    text-align: justify;
+}
+
+#epub-content iframe h1, 
+#epub-content iframe h2, 
+#epub-content iframe h3,
+#epub-content iframe h4,
+#epub-content iframe h5,
+#epub-content iframe h6 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    color: #1e293b;
+}
+
 /* Page Navigation */
 .page-navigation {
     position: fixed;
