@@ -6,7 +6,10 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-.dark { background-color:#1c1c1e; color:#fff; }
+body.dark {
+    background-color:#1c1c1e;
+    color:#fff;
+}
 
 .view {
     position:fixed; top:0; left:0; width:100%; height:100%; overflow:auto;
@@ -16,9 +19,13 @@ body {
 
 .view.active { transform: translateX(0); }
 
-.ios-header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; border-bottom:1px solid #e0e0e0; background-color:inherit; position:sticky; top:0; z-index:100; }
+.ios-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 20px; border-bottom:1px solid #e0e0e0;
+    background-color:inherit; position:sticky; top:0; z-index:100;
+}
 
-.ios-title { font-size:1.4rem; font-weight:700; margin:0; }
+.ios-title { font-size:1.4rem; font-weight:700; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 .actions { display:flex; gap:10px; }
 
@@ -26,13 +33,14 @@ body {
 
 .ios-button:hover { background:rgba(0,0,0,0.05); }
 
-.ios-grid { padding:20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:20px; }
+.ios-grid { padding:20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:20px; }
 
-.book-card { display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+.book-card { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform 0.2s ease; }
+.book-card:hover { transform:translateY(-2px); }
 
-.book-card img { width:100%; height:150px; object-fit:cover; border-radius:10px; }
+.book-card img { width:100%; height:160px; object-fit:cover; border-radius:10px; }
 
-.book-card p { margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; font-size:0.95rem; text-align:center; }
+.book-card p { margin-top:5px; font-weight:600; font-size:0.95rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
 
 #reader-area { padding:20px; height:calc(100% - 60px); overflow:auto; position:relative; }
 
