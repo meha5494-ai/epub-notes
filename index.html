@@ -6,33 +6,33 @@
   <title>کتابخانه من 📚</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
-  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v5.0.1/dist/font-face.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-container">
-    <header>
+    <header class="app-header glass">
       <h1>کتابخانه من</h1>
       <div class="header-actions">
-        <button id="theme-toggle">🌙</button>
+        <button id="theme-toggle" title="تغییر تم">🌙</button>
         <button id="install-btn">⬇️ نصب</button>
       </div>
     </header>
 
     <section class="upload-section">
       <input type="file" id="book-upload" accept=".epub" hidden>
-      <button id="upload-btn">📤 افزودن کتاب جدید</button>
+      <button id="upload-btn">📤 افزودن کتاب</button>
     </section>
 
     <section class="book-list">
       <h2>📚 کتاب‌های من</h2>
-      <div id="books-container"></div>
+      <div id="books-container" class="book-grid"></div>
     </section>
 
     <section id="reader-section" class="hidden">
-      <div class="reader-controls">
-        <button id="back-btn">🔙 بازگشت</button>
-        <button id="add-note-btn">📝 یادداشت</button>
+      <div class="reader-controls glass">
+        <button id="back-btn">🔙</button>
+        <button id="add-note-btn">📝</button>
       </div>
       <div id="viewer"></div>
     </section>
