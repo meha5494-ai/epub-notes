@@ -147,10 +147,11 @@ document.addEventListener('DOMContentLoaded', function() {
         continuousViewBtn.classList.add('active');
         pagedViewBtn.classList.remove('active');
         
-        // بارگذاری کتاب
+        // بارگذاری کتاب با فایل صحیح
         try {
             console.log('Loading book...');
-            await window.EpubManager.loadEpub(book.id, book.file, book.title);
+            // اصلاح: استفاده از book.epubFile به جای book.file
+            await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
             console.log('Book loaded successfully');
         } catch (error) {
             console.error('Error opening book:', error);
