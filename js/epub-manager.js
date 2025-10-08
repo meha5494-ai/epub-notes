@@ -18,13 +18,27 @@ const EpubManager = {
                 flow: 'scrolled-doc',
                 spread: 'none'
             });
+            
+            // اضافه کردن رویداد برای نمایش خطا در صورت عدم بارگذاری
+            currentRendition.on('relocated', (location) => {
+                console.log('Book loaded to location:', location);
+            });
+            
             await currentRendition.display();
             currentRendition.resize();
             loadingOverlay.style.display = 'none';
             return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB', e);
-            loadingOverlay.textContent = 'خطا در بارگذاری کتاب';
+            loadingOverlay.innerHTML = `
+                <div class="error-message">
+                    <span class="material-icons">error</span>
+                    <p>خطا در بارگذاری کتاب</p>
+                    <button class="mdc-button mdc-button--outlined" onclick="location.reload()">
+                        تلاش مجدد
+                    </button>
+                </div>`;
+            loadingOverlay.style.display = 'flex';
         }
     },
 
