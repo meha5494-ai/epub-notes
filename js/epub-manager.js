@@ -1,96 +1,56 @@
-// Access global NotesManager
-const NotesManager = window.NotesManager;
-
-const bookContainer = document.getElementById('book-container');
-const loadingOverlay = document.getElementById('loading-overlay');
-const popover = document.getElementById('add-note-popover');
-const notesSheet = document.getElementById('notes-sheet');
-const noteTextInput = document.getElementById('note-text-input');
-
-let currentBook = null;
-let currentRendition = null;
-let currentBookId = null;
-let currentCfiRange = null;
-let currentContextText = null;
-
 window.EpubManager = {
-    loadEpub: async (bookId, epubFile, bookTitle) => {
-        currentBookId = bookId;
-        document.getElementById('reader-title').textContent = bookTitle;
-        loadingOverlay.classList.remove('hidden');
+    currentBook: null,
+    currentRendition: null,
+    currentBookId: null,
+    currentNotes: [],
+
+    openBook(book){
+        const readerTitle = document.getElementById('reader-title');
+        const bookContainer = document.getElementById('book-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        readerTitle.textContent = book.title;
         bookContainer.innerHTML = '';
+        loadingOverlay.style.display='flex';
 
-        try {
-            currentBook = new ePub(epubFile);
-            currentRendition = currentBook.renderTo('book-container', {
-                width: '100%',
-                height: '100%',
-                method: 'scrolled-doc',
-                manager: 'default'
-            });
-            await currentRendition.display();
+        this.currentBook = new ePub(book.file);
+        this.currentRendition = this.currentBook.renderTo('book-container',{
+            width:'100%', height:'100%', method:'scrolled-doc'
+        });
 
-            currentRendition.on('rendered', (section, view) => {
-                const doc = view.document;
-                if (doc) {
-                    doc.documentElement.setAttribute('dir', 'rtl');
-                    doc.body.style.fontFamily = 'Vazirmatn, sans-serif';
-                    doc.body.style.textAlign = 'justify';
-                }
-            });
-
-            loadingOverlay.classList.add('hidden');
-            EpubManager.setupSelectionHandler();
-        } catch (err) {
-            console.error(err);
-            loadingOverlay.textContent = 'خطا در بارگذاری کتاب.';
-        }
-    },
-
-    extractBookMetadata: async (file) => {
-        const book = new ePub(file);
-        const bookId = file.name + file.size + file.lastModified;
-        await book.opened;
-        const metadata = book.metadata;
-
-        let cover = null;
-        try { cover = await book.coverUrl(); } catch(e){}
-
-        return {
-            id: bookId,
-            title: metadata.title || file.name.replace('.epub',''),
-            author: metadata.creator || 'ناشناس',
-            cover: cover,
-            epubFile: file
-        };
-    },
-
-    setupSelectionHandler: () => {
-        if (!currentRendition) return;
-
-        currentRendition.on('selected', (cfiRange, contents) => {
-            const text = currentRendition.getRange(cfiRange).toString().trim();
-            if(text) EpubManager.showAddNotePopover(cfiRange, text, contents);
-            else EpubManager.clearSelection();
+        this.currentRendition.display().then(()=>{
+            loadingOverlay.style.display='none';
+            this.setupSelection();
         });
     },
 
-    clearSelection: () => {
-        if (currentRendition) currentRendition.getSelection().removeAllRanges();
-        EpubManager.hideAddNotePopover();
+    setupSelection(){
+        if(!this.currentRendition) return;
+        const addNotePopover = document.getElementById('add-note-popover');
+        const noteText = document.getElementById('note-text');
+        const saveNoteBtn = document.getElementById('save-note');
+
+        this.currentRendition.on('selected', (cfiRange, contents)=>{
+            const text = this.currentRendition.getRange(cfiRange).toString().trim();
+            if(text.length>0){
+                addNotePopover.classList.add('visible');
+                noteText.value = '';
+                noteText.focus();
+
+                saveNoteBtn.onclick = ()=>{
+                    window.NotesManager.add(noteText.value);
+                    this.currentNotes.push({cfiRange, text:noteText.value});
+                    this.highlightNotes();
+                    addNotePopover.classList.remove('visible');
+                    renderNotes();
+                };
+            }
+        });
     },
 
-    showAddNotePopover: (cfiRange, contextText, contents) => {
-        currentCfiRange = cfiRange;
-        currentContextText = contextText;
-        noteTextInput.value = '';
-        popover.classList.add('visible');
-        noteTextInput.focus();
-    },
-
-    hideAddNotePopover: () => {
-        popover.classList.remove('visible');
-        currentCfiRange = null;
-        currentContextText = null;
+    highlightNotes(){
+        this.currentNotes.forEach(note=>{
+            this.currentRendition.annotations.highlight(note.cfiRange,{fill:'yellow',opacity:0.3},()=>{},"highlight-note");
+        });
     }
 };
