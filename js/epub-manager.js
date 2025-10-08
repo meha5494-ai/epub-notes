@@ -32,13 +32,12 @@ const EpubManager = {
             
             await currentRendition.display();
             
-            // افزودن رویداد برای ردیابی پیشرفت
+            // ردیابی پیشرفت مطالعه
             currentRendition.on('relocated', location => {
-                updateProgress(location.start / location.total * 100);
-                updatePageInfo(location.start, location.total);
+                this.updateProgress(location.start / location.total * 100);
+                this.updatePageInfo(location.start, location.total);
             });
             
-            // تنظیمات استایل
             setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
@@ -65,52 +64,19 @@ const EpubManager = {
         } catch (e) {
             console.error('Error loading EPUB:', e);
             bookContainer.innerHTML = `
-                <div style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 60px 20px;
-                    text-align: center;
-                    color: #64748b;
-                    height: 600px;
-                    background: white;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                ">
-                    <div style="
-                        width: 80px;
-                        height: 80px;
-                        background: rgba(236, 72, 153, 0.1);
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin-bottom: 24px;
-                        color: #ec4899;
-                        font-size: 2rem;
-                    ">
+                <div class="error-container">
+                    <div class="error-icon">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <h3 style="font-size: 1.5rem; margin-bottom: 8px; color: #1e293b;">خطا در بارگذاری کتاب</h3>
-                    <p style="margin-bottom: 24px; max-width: 400px;">متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
-                    <button style="
-                        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 50px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                    " onclick="location.reload()">
+                    <h3>خطا در بارگذاری کتاب</h3>
+                    <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
+                    <button class="retry-btn">
                         <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
                 </div>`;
         }
     },
 
-    // متدهای جدید برای مدیریت پیشرفت
     updateProgress: (percent) => {
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
@@ -125,12 +91,89 @@ const EpubManager = {
 
     updatePageInfo: (current, total) => {
         const pageInfo = document.getElementById('page-info');
+        const pageInfoNav = document.getElementById('page-info-nav');
+        
         if (pageInfo) {
             pageInfo.textContent = `صفحه ${current} از ${total}`;
         }
+        if (pageInfoNav) {
+            pageInfoNav.textContent = `صفحه ${current} از ${total}`;
+        }
     },
 
-    // متدهای جدید برای ناوبری
+    showMindmap: async () => {
+        if (!currentBook) return;
+        
+        try {
+            const toc = await currentBook.loaded.spine.getToc();
+            const mindmapContent = document.getElementById('mindmap-content');
+            
+            // ساختار داده برای مایند مپ
+            const mindmapData = {
+                name: "کتاب",
+                children: toc.map(item => ({
+                    name: item.label,
+                    children: item.subitems ? item.subitems.map(sub => ({
+                        name: sub.label
+                    })) : []
+                }))
+            };
+            
+            // ایجاد SVG برای مایند مپ
+            const width = 300;
+            const height = 400;
+            
+            const svg = d3.select("#mindmap-content")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width/2}, 20)`);
+            
+            const root = d3.hierarchy(mindmapData);
+            const treeLayout = d3.tree().size([width - 100, height - 100]);
+            treeLayout(root);
+            
+            // رسم خطوط اتصال
+            svg.selectAll(".link")
+                .data(root.links())
+                .enter()
+                .append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkVertical()
+                    .x(d => d.x)
+                    .y(d => d.y));
+            
+            //绘制节点
+            const node = svg.selectAll(".node")
+                .data(root.descendants())
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+            
+            node.append("circle")
+                .attr("r", 6)
+                .style("fill", d => d.children ? "#6366f1" : "#ec4899");
+            
+            node.append("text")
+                .attr("dy", "0.31em")
+                .attr("x", d => d.children ? -10 : 10)
+                .style("text-anchor", d => d.children ? "end" : "start")
+                .text(d => d.data.name)
+                .style("font-size", "12px");
+            
+        } catch (error) {
+            console.error('Error generating mindmap:', error);
+            document.getElementById('mindmap-content').innerHTML = `
+                <div class="mindmap-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
+                </div>
+            `;
+        }
+    },
+
     prev: () => {
         if (currentRendition) {
             currentRendition.prev();
@@ -140,49 +183,6 @@ const EpubManager = {
     next: () => {
         if (currentRendition) {
             currentRendition.next();
-        }
-    },
-
-    // متد جدید برای نمایش مایند مپ
-    showMindmap: async () => {
-        if (!currentBook) return;
-        
-        try {
-            const toc = await currentBook.loaded.spine.getToc();
-            const mindmapContent = document.querySelector('.mindmap-content');
-            
-            // ایجاد ساختار ساده مایند مپ
-            mindmapContent.innerHTML = `
-                <div class="mindmap-tree">
-                    ${toc.map(item => `
-                        <div class="mindmap-node">
-                            <div class="node-content">
-                                <i class="fas fa-bookmark"></i>
-                                <span>${item.label}</span>
-                            </div>
-                            <div class="node-children">
-                                ${item.subitems ? item.subitems.map(sub => `
-                                    <div class="node-child">
-                                        <i class="fas fa-file-alt"></i>
-                                        <span>${sub.label}</span>
-                                    </div>
-                                `).join('') : ''}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            // نمایش پنل مایند مپ
-            document.getElementById('mindmap-panel').classList.add('visible');
-        } catch (error) {
-            console.error('Error generating mindmap:', error);
-            document.querySelector('.mindmap-content').innerHTML = `
-                <div class="mindmap-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
-                </div>
-            `;
         }
     },
 
