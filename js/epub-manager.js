@@ -13,27 +13,22 @@ const EpubManager = {
             // ایجاد یک div ساده برای محتوای کتاب
             const contentDiv = document.createElement('div');
             contentDiv.style.width = '100%';
-            contentDiv.style.height = '100%';
-            contentDiv.style.minHeight = '500px';
+            contentDiv.style.height = '600px';
             bookContainer.appendChild(contentDiv);
             
             currentBook = ePub(file);
             
-            // اطمینان از اینکه کتاب به درستی باز شده
-            await currentBook.ready;
-            
-            // رندر کتاب با تنظیمات ساده
+            // رندر کتاب با ساده‌ترین تنظیمات ممکن
             currentRendition = currentBook.renderTo(contentDiv, {
                 width: '100%',
                 height: '100%',
-                flow: 'scrolled-doc',
-                manager: 'default'
+                flow: 'scrolled'
             });
             
             // نمایش کتاب
             await currentRendition.display();
             
-            // پنهان کردن لودینگ بعد از 1 ثانیه
+            // پنهان کردن لودینگ
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
             }, 1000);
