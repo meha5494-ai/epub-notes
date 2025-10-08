@@ -56,11 +56,13 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 
-    async function openBook(book){ // اضافه کردن async
+    async function openBook(book){
         libraryView.classList.remove('active');
         readerView.classList.add('active');
-        document.getElementById('reader-title').textContent = book.title; // تنظیم عنوان کتاب
-        await EpubManager.loadEpub(book.id, book.file, book.title); // اضافه کردن await
+        document.getElementById('reader-title').textContent = book.title;
+        setTimeout(async () => {
+            await EpubManager.loadEpub(book.id, book.file, book.title);
+        }, 100);
         window.NotesManager.clear();
         renderNotes();
     }
