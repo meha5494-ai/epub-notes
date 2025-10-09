@@ -5,11 +5,13 @@ let currentRendition = null;
 let currentBookId = null;
 
 const EpubManager = {
+    // بارگذاری و نمایش EPUB
     loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
         currentBookId = id;
 
         try {
+            // ایجاد ناحیه نمایش کتاب
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
             contentDiv.style.cssText = `
@@ -19,10 +21,10 @@ const EpubManager = {
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 overflow: hidden;
-                position: relative;
             `;
             bookContainer.appendChild(contentDiv);
 
+            // ایجاد کتاب
             currentBook = ePub(file);
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
@@ -31,7 +33,7 @@ const EpubManager = {
                 manager: "continuous"
             });
 
-            // اعمال CSS روی محتوای کتاب
+            // اعمال CSS پس از بارگذاری محتوا
             currentRendition.hooks.content.register((contents) => {
                 const doc = contents.document;
                 if (!doc) return;
@@ -53,19 +55,19 @@ const EpubManager = {
                 await currentRendition.display();
             }
 
-            // ذخیره موقعیت مطالعه
+            // ذخیره موقعیت مطالعه و بروزرسانی پیشرفت
             currentRendition.on("relocated", (location) => {
                 if (location && location.start && location.start.cfi) {
                     localStorage.setItem(`book_progress_${currentBookId}`, location.start.cfi);
 
-                    // بروزرسانی نوار پیشرفت
+                    // بروزرسانی پیشرفت و شماره صفحه
                     const percent = location.start.percentage * 100;
                     EpubManager.updateProgress(percent);
                     EpubManager.updatePageInfo(Math.ceil(percent), 100);
                 }
             });
 
-            // واکنش به resize
+            // واکنش به تغییر اندازه صفحه
             window.addEventListener('resize', async () => {
                 if (currentRendition) {
                     const loc = localStorage.getItem(`book_progress_${currentBookId}`);
@@ -74,6 +76,7 @@ const EpubManager = {
             });
 
             return currentRendition;
+
         } catch (e) {
             console.error('Error loading EPUB:', e);
             bookContainer.innerHTML = `
@@ -90,6 +93,7 @@ const EpubManager = {
         }
     },
 
+    // نوار پیشرفت
     updateProgress: (percent) => {
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
@@ -97,6 +101,7 @@ const EpubManager = {
         if (progressText) progressText.textContent = `${Math.round(percent)}%`;
     },
 
+    // شماره صفحه
     updatePageInfo: (current, total) => {
         const pageInfo = document.getElementById('page-info');
         const pageInfoNav = document.getElementById('page-info-nav');
@@ -104,6 +109,7 @@ const EpubManager = {
         if (pageInfoNav) pageInfoNav.textContent = `صفحه ${current} از ${total}`;
     },
 
+    // دکمه‌های قبلی و بعدی
     prev: () => { if (currentRendition) currentRendition.prev(); },
     next: () => { if (currentRendition) currentRendition.next(); },
 };
