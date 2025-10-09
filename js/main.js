@@ -19,11 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const pagedViewBtn = document.getElementById('paged-view-btn');
     const mindmapBtn = document.getElementById('mindmap-btn');
     const closeMindmapBtn = document.getElementById('close-mindmap');
-    const settingsSheet = document.getElementById('settings-sheet');
-    const closeSettingsBtn = document.getElementById('close-settings');
 
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
+    // دکمه بازگشت
     if (backBtn) {
         backBtn.addEventListener('click', function() {
             readerView.classList.remove('active');
@@ -31,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // دکمه مایندمپ
     if (mindmapBtn) {
         mindmapBtn.addEventListener('click', function() {
             window.EpubManager.showMindmap();
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // دکمه‌های نمایش
     if (continuousViewBtn) {
         continuousViewBtn.addEventListener('click', function() {
             window.EpubManager.setViewMode('continuous');
@@ -60,8 +61,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // آپلود کتاب
     uploadBtn.addEventListener('click', () => fileInput.click());
-
     fileInput.addEventListener('change', async e => {
         const file = e.target.files[0];
         if (!file) return;
@@ -126,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ⚡ باز کردن کتاب و اعمال تنظیمات شخصی‌سازی روی متن داخل کتاب
     async function openBook(book) {
         libraryView.classList.remove('active');
         readerView.classList.add('active');
@@ -136,14 +138,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
+
+            // اعمال تنظیمات شخصی‌سازی روی متن داخل iframe کتاب
+            setTimeout(() => {
+                const iframe = document.querySelector('#epub-content iframe');
+                if (iframe) {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (iframeDoc && iframeDoc.body) {
+                        const fontSize = localStorage.getItem('fontSize') || '16px';
+                        const fontFamily = localStorage.getItem('fontFamily') || 'Vazirmatn, sans-serif';
+                        const pageColor = localStorage.getItem('pageColor') || 'white';
+                        const lineHeight = 1.8;
+
+                        iframeDoc.body.style.fontSize = fontSize;
+                        iframeDoc.body.style.fontFamily = fontFamily;
+                        iframeDoc.body.style.background = pageColor==='light'?'#fff':pageColor==='sepia'?'#f5e6d3':'#1e293b';
+                        iframeDoc.body.style.color = pageColor==='dark'?'#fff':'#1e293b';
+                        iframeDoc.body.style.lineHeight = lineHeight;
+                        iframeDoc.body.style.direction = 'rtl';
+                        iframeDoc.body.style.padding = '20px';
+                    }
+                }
+            }, 500);
+
         } catch (error) {
             console.error('Error opening book:', error);
         }
 
         window.NotesManager.clear();
         renderNotes();
-
-        applySettings(); // ⚡ اعمال تنظیمات شخصی‌سازی فقط
     }
 
     function renderNotes() {
@@ -196,38 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const icon=themeToggle.querySelector('i');
         icon.classList.remove('fa-moon'); icon.classList.add('fa-sun');
     }
-
-    // ⚙️ تنظیمات شخصی‌سازی
-    function applySettings(){
-        const fontSize=localStorage.getItem('fontSize')||'medium';
-        const pageColor=localStorage.getItem('pageColor')||'light';
-        const fontFamily=localStorage.getItem('fontFamily')||'vazirmatn';
-        const readingMode=localStorage.getItem('readingMode')||'continuous';
-
-        document.documentElement.style.setProperty('--font-size',getFontSizeValue(fontSize));
-        document.body.classList.remove('light','sepia','dark');
-        document.body.classList.add(pageColor);
-        document.body.style.fontFamily=getFontFamilyValue(fontFamily);
-
-        if(continuousViewBtn && pagedViewBtn){
-            if(readingMode==='continuous'){ continuousViewBtn.classList.add('active'); pagedViewBtn.classList.remove('active'); }
-            else{ pagedViewBtn.classList.add('active'); continuousViewBtn.classList.remove('active'); }
-        }
-    }
-
-    function getFontSizeValue(size){switch(size){case 'small':return '14px'; case 'medium':return '16px'; case 'large':return '18px'; default:return '16px';}}
-    function getFontFamilyValue(family){switch(family){case 'vazirmatn':return 'Vazirmatn, sans-serif'; case 'yekan':return 'Yekan, sans-serif'; case 'samim':return 'Samim, sans-serif'; default:return 'Vazirmatn, sans-serif';}}
-
-    document.querySelectorAll('.setting-btn').forEach(btn=>{
-        btn.addEventListener('click',function(){
-            const setting=this.dataset.setting;
-            const value=this.dataset.value;
-            localStorage.setItem(setting,value);
-            document.querySelectorAll(`.setting-btn[data-setting="${setting}"]`).forEach(b=>b.classList.remove('active'));
-            this.classList.add('active');
-            applySettings();
-        });
-    });
 
     renderLibrary();
 });
