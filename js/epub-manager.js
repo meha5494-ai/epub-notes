@@ -23,14 +23,16 @@ const EpubManager = {
             bookContainer.appendChild(contentDiv);
 
             currentBook = ePub(file);
+
+            // اینجا renderTo با flow: "paginated" یا "scrolled-doc"
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
                 flow: "scrolled-doc",
-                manager: "continuous"
+                manager: "continuous",
             });
 
-            // اعمال CSS به محتوای کتاب بعد از لود
+            // اعمال CSS بعد از لود واقعی محتوا
             currentRendition.hooks.content.register((contents) => {
                 const doc = contents.document;
                 if (!doc) return;
@@ -52,14 +54,14 @@ const EpubManager = {
                 await currentRendition.display();
             }
 
-            // ذخیره موقعیت مطالعه در هر تغییر
+            // ذخیره موقعیت مطالعه
             currentRendition.on("relocated", (location) => {
                 if (location && location.start && location.start.cfi) {
                     localStorage.setItem(`book_progress_${currentBookId}`, location.start.cfi);
                 }
             });
 
-            // واکنش به تغییر اندازه صفحه و بازخوانی موقعیت
+            // اطمینان از نمایش بعد از resize
             window.addEventListener('resize', async () => {
                 if (currentRendition) {
                     const loc = localStorage.getItem(`book_progress_${currentBookId}`);
@@ -82,101 +84,6 @@ const EpubManager = {
                         <i class="fas fa-redo"></i> تلاش مجدد
                     </button>
                 </div>`;
-        }
-    },
-
-    extractBookMetadata: async (file) => {
-        const toBase64 = (file) => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-
-        const bookDataUrl = await toBase64(file);
-        const bookId = file.name + file.size + file.lastModified;
-        const book = ePub(file);
-        await book.opened;
-
-        let coverData = null;
-        try { coverData = await book.coverUrl(); } catch (e) { console.warn('no cover', e); }
-
-        return {
-            id: bookId,
-            title: file.name.replace('.epub', ''),
-            author: 'ناشناس',
-            cover: coverData,
-            dataUrl: bookDataUrl
-        };
-    },
-
-    updateProgress: (percent) => {
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-        if (progressFill) progressFill.style.width = `${percent}%`;
-        if (progressText) progressText.textContent = `${Math.round(percent)}%`;
-    },
-
-    updatePageInfo: (current, total) => {
-        const pageInfo = document.getElementById('page-info');
-        const pageInfoNav = document.getElementById('page-info-nav');
-        if (pageInfo) pageInfo.textContent = `صفحه ${current} از ${total}`;
-        if (pageInfoNav) pageInfoNav.textContent = `صفحه ${current} از ${total}`;
-    },
-
-    showMindmap: async () => {
-        if (!currentBook) return;
-        try {
-            const toc = await currentBook.loaded.spine.getToc();
-            const mindmapContent = document.getElementById('mindmap-content');
-            const mindmapData = {
-                name: "کتاب",
-                children: toc.map(item => ({
-                    name: item.label,
-                    children: item.subitems ? item.subitems.map(sub => ({ name: sub.label })) : []
-                }))
-            };
-            const width = 300;
-            const height = 400;
-            mindmapContent.innerHTML = '';
-            const svg = d3.select("#mindmap-content")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", `translate(${width/2}, 20)`);
-            const root = d3.hierarchy(mindmapData);
-            const treeLayout = d3.tree().size([width - 100, height - 100]);
-            treeLayout(root);
-            svg.selectAll(".link")
-                .data(root.links())
-                .enter()
-                .append("path")
-                .attr("class", "link")
-                .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
-            const node = svg.selectAll(".node")
-                .data(root.descendants())
-                .enter()
-                .append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.x},${d.y})`);
-            node.append("circle")
-                .attr("r", 6)
-                .style("fill", d => d.children ? "#6366f1" : "#ec4899");
-            node.append("text")
-                .attr("dy", "0.31em")
-                .attr("x", d => d.children ? -10 : 10)
-                .style("text-anchor", d => d.children ? "end" : "start")
-                .text(d => d.data.name)
-                .style("font-size", "12px");
-        } catch (error) {
-            console.error('Error generating mindmap:', error);
-            document.getElementById('mindmap-content').innerHTML = `
-                <div class="mindmap-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
-                </div>
-            `;
         }
     },
 
