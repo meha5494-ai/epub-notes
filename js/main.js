@@ -14,21 +14,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveNoteBtn = document.getElementById('save-note');
     const noteText = document.getElementById('note-text');
     const addNoteBtn = document.getElementById('add-note-btn');
-    
-    // دکمه‌های ناوبری صفحات
+
     const prevPageBtn = document.getElementById('prev-page-btn');
     const nextPageBtn = document.getElementById('next-page-btn');
-    
-    // دکمه‌های نمایش
     const continuousViewBtn = document.getElementById('continuous-view-btn');
     const pagedViewBtn = document.getElementById('paged-view-btn');
     const mindmapBtn = document.getElementById('mindmap-btn');
     const closeMindmapBtn = document.getElementById('close-mindmap');
-    
+
     // بارگذاری کتاب‌ها از localStorage
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
-    // اضافه کردن رویداد به دکمه بازگشت
+    // ---------- دکمه‌ها ----------
     if (backBtn) {
         backBtn.addEventListener('click', function() {
             readerView.classList.remove('active');
@@ -36,22 +33,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // اضافه کردن رویداد به دکمه‌های ناویری (فقط در دسکتاپ)
-    if (prevPageBtn) {
-        prevPageBtn.addEventListener('click', function() {
-            window.EpubManager.prev();
-        });
-    }
+    if (prevPageBtn) prevPageBtn.addEventListener('click', () => window.EpubManager.prev());
+    if (nextPageBtn) nextPageBtn.addEventListener('click', () => window.EpubManager.next());
 
-    if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', function() {
-            window.EpubManager.next();
-        });
-    }
-
-    // اضافه کردن رویداد به دکمه‌های نمایش
     if (continuousViewBtn) {
-        continuousViewBtn.addEventListener('click', function() {
+        continuousViewBtn.addEventListener('click', () => {
             window.EpubManager.setViewMode('continuous');
             continuousViewBtn.classList.add('active');
             pagedViewBtn.classList.remove('active');
@@ -59,247 +45,262 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (pagedViewBtn) {
-        pagedViewBtn.addEventListener('click', function() {
+        pagedViewBtn.addEventListener('click', () => {
             window.EpubManager.setViewMode('paged');
             pagedViewBtn.classList.add('active');
             continuousViewBtn.classList.remove('active');
         });
     }
 
-    // اضافه کردن رویداد به دکمه مایند مپ
     if (mindmapBtn) {
-        mindmapBtn.addEventListener('click', function() {
+        mindmapBtn.addEventListener('click', () => {
             window.EpubManager.showMindmap();
-            document.getElementById('mindmap-panel').classList.add('visible');
         });
     }
 
-    if (closeMindmapBtn) {
-        closeMindmapBtn.addEventListener('click', function() {
-            document.getElementById('mindmap-panel').classList.remove('visible');
-        });
-    }
+    if (closeMindmapBtn) closeMindmapBtn.addEventListener('click', () => {
+        document.getElementById('mindmap-panel').classList.remove('visible');
+    });
 
     uploadBtn.addEventListener('click', () => fileInput.click());
 
+    // ✅ اصلاح شده: تبدیل فایل به Base64 و ذخیره
     fileInput.addEventListener('change', async e => {
         const file = e.target.files[0];
         if (!file) return;
-        const bookData = await window.EpubManager.extractBookMetadata(file);
-        books.push(bookData);
-        
-        // ذخیره کتاب‌ها در localStorage
-        localStorage.setItem('epubBooks', JSON.stringify(books));
-        
-        renderLibrary();
+
+        try {
+            const bookData = await window.EpubManager.extractBookMetadata(file);
+            books.push(bookData);
+            localStorage.setItem('epubBooks', JSON.stringify(books));
+            renderLibrary();
+        } catch (error) {
+            console.error('Error processing book:', error);
+            alert('خطا در پردازش کتاب');
+        }
     });
 
+    // ---------- رندر کتابخانه ----------
     function renderLibrary() {
         bookGrid.innerHTML = '';
         if (books.length === 0) {
-            bookGrid.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <h3>کتابخانه شما خالی است</h3>
-                    <p>برای شروع، یک کتاب EPUB اضافه کنید</p>
-                    <button class="secondary-btn" onclick="document.getElementById('upload-button').click()">
-                        <i class="fas fa-upload"></i> افزودن کتاب
-                    </button>
-                </div>`;
+            bookGrid.innerHTML = `<div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-book"></i></div>
+                <h3>کتابخانه شما خالی است</h3>
+                <p>برای شروع، یک کتاب EPUB اضافه کنید</p>
+                <button class="secondary-btn" onclick="document.getElementById('upload-button').click()">
+                    <i class="fas fa-upload"></i> افزودن کتاب
+                </button>
+            </div>`;
             return;
         }
-        
-        books.forEach((book, index) => {
+
+        books.forEach((book,index)=>{
             const div = document.createElement('div');
-            div.className = 'book-card';
-            
-            if (book.cover) {
-                const img = document.createElement('img');
-                img.src = book.cover;
-                img.alt = book.title;
+            div.className='book-card';
+
+            if(book.cover){
+                const img=document.createElement('img');
+                img.src=book.cover;
+                img.alt=book.title;
                 div.appendChild(img);
             } else {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'book-placeholder';
-                placeholder.innerHTML = '<i class="fas fa-book-open"></i>';
+                const placeholder=document.createElement('div');
+                placeholder.className='book-placeholder';
+                placeholder.innerHTML='<i class="fas fa-book-open"></i>';
                 div.appendChild(placeholder);
             }
-            
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'book-title';
-            titleDiv.textContent = book.title;
+
+            const titleDiv=document.createElement('div');
+            titleDiv.className='book-title';
+            titleDiv.textContent=book.title;
             div.appendChild(titleDiv);
-            
-            // دکمه حذف کتاب
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-book-btn';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.onclick = (e) => {
+
+            const deleteBtn=document.createElement('button');
+            deleteBtn.className='delete-book-btn';
+            deleteBtn.innerHTML='<i class="fas fa-trash"></i>';
+            deleteBtn.onclick=(e)=>{
                 e.stopPropagation();
-                if (confirm('آیا از حذف این کتاب مطمئن هستید؟')) {
-                    books.splice(index, 1);
-                    localStorage.setItem('epubBooks', JSON.stringify(books));
+                if(confirm('آیا از حذف این کتاب مطمئن هستید؟')){
+                    books.splice(index,1);
+                    localStorage.setItem('epubBooks',JSON.stringify(books));
                     renderLibrary();
                 }
             };
             div.appendChild(deleteBtn);
-            
-            div.onclick = () => openBook(book);
+
+            div.onclick = ()=>openBook(book);
             bookGrid.appendChild(div);
         });
     }
 
-    async function openBook(book) {
-        console.log('Opening book:', book.title);
+    // ---------- باز کردن کتاب ----------
+    async function openBook(book){
         libraryView.classList.remove('active');
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
-        
-        // ریست کردن حالت نمایش
+
         continuousViewBtn.classList.add('active');
         pagedViewBtn.classList.remove('active');
-        
-        // بارگذاری کتاب با فایل صحیح
+
         try {
-            console.log('Loading book...');
-            await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
-            console.log('Book loaded successfully');
-        } catch (error) {
-            console.error('Error opening book:', error);
+            // ✅ اصلاح شده: استفاده از Base64 یا فایل واقعی
+            if (book.dataUrl) {
+                await window.EpubManager.loadEpub(book.id, book.dataUrl, book.title);
+            } else if (book.epubFile) {
+                await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
+            }
+
+            applySettingsToBook(); // اعمال تنظیمات فونت و رنگ و سایز
+        } catch(e){
+            console.error(e);
+            alert('خطا در باز کردن کتاب');
         }
-        
-        window.NotesManager.clear();
+
+        window.NotesManager.setBook(book.id);
         renderNotes();
     }
 
-    function renderNotes() {
-        const notesList = document.getElementById('notes-list');
-        const noNotesMsg = document.getElementById('no-notes-message');
-        notesList.innerHTML = '';
-        const notes = window.NotesManager.getAll();
-        
-        if (notes.length === 0) {
-            noNotesMsg.style.display = 'flex';
-            return;
-        }
-        
-        noNotesMsg.style.display = 'none';
-        notes.forEach((note, index) => {
-            const div = document.createElement('div');
-            div.className = 'note-item';
-            div.innerHTML = `
-                <div class="note-content">${note}</div>
-                <button class="delete-note" data-index="${index}">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            notesList.appendChild(div);
+    // ✅ اصلاح شده: اعمال تنظیمات به کتاب
+    function applySettingsToBook(){
+        if(!window.EpubManager.currentRendition) return;
+        const rendition = window.EpubManager.currentRendition;
+
+        const fontSize = localStorage.getItem('fontSize') || '16px';
+        const fontFamily = localStorage.getItem('fontFamily') || 'Vazirmatn, sans-serif';
+        const pageColor = localStorage.getItem('pageColor') || 'light';
+        const readingMode = localStorage.getItem('readingMode') || 'continuous';
+
+        // ثبت تم‌های سفارشی
+        rendition.themes.register({
+            'custom': {
+                'body': {
+                    'font-size': fontSize,
+                    'font-family': fontFamily,
+                    'direction': 'rtl',
+                    'padding': '20px',
+                    'line-height': '1.8'
+                },
+                'p, div, span': {
+                    'font-size': fontSize,
+                    'font-family': fontFamily,
+                    'line-height': '1.8'
+                }
+            }
         });
         
-        document.querySelectorAll('.delete-note').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const index = parseInt(e.currentTarget.dataset.index);
+        // انتخاب تم
+        rendition.themes.select('custom');
+        
+        // اعمال رنگ پس‌زمینه
+        rendition.themes.register({
+            'light': {
+                'body': {
+                    'background': '#fff',
+                    'color': '#1e293b'
+                }
+            },
+            'sepia': {
+                'body': {
+                    'background': '#f5e6d3',
+                    'color': '#1e293b'
+                }
+            },
+            'dark': {
+                'body': {
+                    'background': '#1e293b',
+                    'color': '#fff'
+                }
+            }
+        });
+        
+        rendition.themes.select(pageColor);
+        
+        // تنظیم حالت نمایش
+        if(readingMode === 'continuous') {
+            rendition.flow('scrolled-doc');
+        } else {
+            rendition.flow('paginated');
+        }
+    }
+
+    // ✅ اصلاح شده: مدیریت تنظیمات
+    document.querySelectorAll('.setting-btn').forEach(btn=>{
+        btn.addEventListener('click',function(){
+            const setting=this.dataset.setting;
+            const value=this.dataset.value;
+
+            localStorage.setItem(setting,value);
+            document.querySelectorAll(`.setting-btn[data-setting="${setting}"]`).forEach(b=>b.classList.remove('active'));
+            this.classList.add('active');
+
+            applySettingsToBook();
+        });
+    });
+
+    // ---------- یادداشت‌ها ----------
+    window.NotesManager = {
+        currentBookId:null,
+        notes:[],
+        setBook(bookId){this.currentBookId=bookId;this.loadFromStorage();},
+        add(note){if(note && note.trim()!==""){this.notes.push(note);this.saveToStorage();}},
+        getAll(){return this.notes;},
+        delete(index){if(index>=0&&index<this.notes.length){this.notes.splice(index,1);this.saveToStorage();}},
+        clear(){this.notes=[];this.saveToStorage();},
+        saveToStorage(){if(!this.currentBookId) return; localStorage.setItem(`epubNotes_${this.currentBookId}`,JSON.stringify(this.notes));},
+        loadFromStorage(){if(!this.currentBookId) return; const saved=localStorage.getItem(`epubNotes_${this.currentBookId}`); this.notes=saved?JSON.parse(saved):[];}
+    };
+
+    function renderNotes(){
+        const notesList=document.getElementById('notes-list');
+        const noNotesMsg=document.getElementById('no-notes-message');
+        notesList.innerHTML='';
+        const notes=window.NotesManager.getAll();
+        if(notes.length===0){noNotesMsg.style.display='flex'; return;}
+        noNotesMsg.style.display='none';
+        notes.forEach((note,index)=>{
+            const div=document.createElement('div');
+            div.className='note-item';
+            div.innerHTML=`<div class="note-content">${note}</div>
+                <button class="delete-note" data-index="${index}"><i class="fas fa-trash"></i></button>`;
+            notesList.appendChild(div);
+        });
+
+        document.querySelectorAll('.delete-note').forEach(btn=>{
+            btn.addEventListener('click',(e)=>{
+                const index=parseInt(e.currentTarget.dataset.index);
                 window.NotesManager.delete(index);
                 renderNotes();
             });
         });
     }
 
-    toggleNotesBtn.addEventListener('click', () => {
-        notesSheet.classList.toggle('visible');
-        renderNotes();
+    toggleNotesBtn.addEventListener('click',()=>{notesSheet.classList.toggle('visible');renderNotes();});
+    closeNotesBtn.addEventListener('click',()=>notesSheet.classList.remove('visible'));
+    addNoteBtn.addEventListener('click',()=>{addNotePopover.classList.add('visible'); noteText.focus();});
+    cancelNoteBtn.addEventListener('click',()=>{addNotePopover.classList.remove('visible'); noteText.value='';});
+    saveNoteBtn.addEventListener('click',()=>{
+        const note=noteText.value.trim();
+        if(note){window.NotesManager.add(note); renderNotes(); addNotePopover.classList.remove('visible'); noteText.value='';}
     });
 
-    closeNotesBtn.addEventListener('click', () => {
-        notesSheet.classList.remove('visible');
-    });
-
-    addNoteBtn.addEventListener('click', () => {
-        addNotePopover.classList.add('visible');
-        noteText.focus();
-    });
-
-    cancelNoteBtn.addEventListener('click', () => {
-        addNotePopover.classList.remove('visible');
-        noteText.value = '';
-    });
-
-    saveNoteBtn.addEventListener('click', () => {
-        const note = noteText.value.trim();
-        if (note) {
-            window.NotesManager.add(note);
-            renderNotes();
-            addNotePopover.classList.remove('visible');
-            noteText.value = '';
-        }
-    });
-
-    themeToggle.addEventListener('click', () => {
+    // ---------- تم ----------
+    themeToggle.addEventListener('click',()=>{
         document.body.classList.toggle('dark');
-        const icon = themeToggle.querySelector('i');
-        if (document.body.classList.contains('dark')) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
-        
-        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        const icon=themeToggle.querySelector('i');
+        if(document.body.classList.contains('dark')){icon.classList.remove('fa-moon');icon.classList.add('fa-sun');}
+        else{icon.classList.remove('fa-sun');icon.classList.add('fa-moon');}
+        localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');
     });
-
-    // بارگذاری تنظیمات تم از localStorage
-    if (localStorage.getItem('theme') === 'dark') {
+    if(localStorage.getItem('theme')==='dark'){
         document.body.classList.add('dark');
-        const icon = themeToggle.querySelector('i');
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
+        const icon=themeToggle.querySelector('i');
+        icon.classList.remove('fa-moon');icon.classList.add('fa-sun');
     }
+
+    // ---------- باز کردن کتاب آخر ----------
+    const lastBook=sessionStorage.getItem('currentBookData');
+    if(lastBook) openBook(JSON.parse(lastBook));
 
     renderLibrary();
-});
-
-window.NotesManager = {
-    notes: [],
-    
-    add(note) {
-        if (note && note.trim() !== "") {
-            this.notes.push(note);
-            this.saveToStorage();
-        }
-    },
-    
-    getAll() {
-        return this.notes;
-    },
-    
-    delete(index) {
-        if (index >= 0 && index < this.notes.length) {
-            this.notes.splice(index, 1);
-            this.saveToStorage();
-        }
-    },
-    
-    clear() {
-        this.notes = [];
-        this.saveToStorage();
-    },
-    
-    saveToStorage() {
-        localStorage.setItem('epubNotes', JSON.stringify(this.notes));
-    },
-    
-    loadFromStorage() {
-        const saved = localStorage.getItem('epubNotes');
-        if (saved) {
-            this.notes = JSON.parse(saved);
-        }
-    }
-};
-
-// بارگذاری یادداشت‌ها از localStorage هنگام بارگذاری صفحه
-window.addEventListener('DOMContentLoaded', () => {
-    window.NotesManager.loadFromStorage();
 });
