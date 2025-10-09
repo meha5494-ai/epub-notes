@@ -34,8 +34,10 @@ const EpubManager = {
                 source = fileOrDataUrl;
             }
 
-            // ✅ ساخت کتاب
+            // ✅ ساخت کتاب و انتظار برای باز شدن کامل
             currentBook = ePub(source);
+            await currentBook.opened; // اضافه شده برای اطمینان از بارگذاری کامل
+            
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
@@ -58,8 +60,8 @@ const EpubManager = {
                 }
             });
 
-            // ✅ استایل‌دهی به iframe
-            setTimeout(() => {
+            // ✅ استایل‌دهی به iframe بعد از رندر شدن
+            currentRendition.on("rendered", () => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -73,7 +75,7 @@ const EpubManager = {
                         iframe.style.border = 'none';
                     }
                 }
-            }, 800);
+            });
         } catch (e) {
             console.error('Error loading EPUB:', e);
             bookContainer.innerHTML = `
@@ -97,7 +99,7 @@ const EpubManager = {
         const dataUrl = await toBase64(file);
         const id = `${file.name}_${file.size}_${file.lastModified}`;
         const book = ePub(file);
-        await book.opened;
+        await book.opened; // اضافه شده برای اطمینان از بارگذاری کامل
 
         let coverData = null;
         try {
@@ -116,7 +118,27 @@ const EpubManager = {
     },
 
     prev: () => { if (currentRendition) currentRendition.prev(); },
-    next: () => { if (currentRendition) currentRendition.next(); }
+    next: () => { if (currentRendition) currentRendition.next(); },
+    
+    // ✅ اضافه شده: تغییر حالت نمایش
+    setViewMode: (mode) => {
+        if (!currentRendition) return;
+        
+        if (mode === 'continuous') {
+            currentRendition.flow('scrolled-doc');
+        } else {
+            currentRendition.flow('paginated');
+        }
+        
+        localStorage.setItem('readingMode', mode);
+    },
+    
+    // ✅ اضافه شده: نمایش مایندمپ
+    showMindmap: () => {
+        console.log('Showing mindmap...');
+        // پیاده‌سازی نمایش مایندمپ
+        document.getElementById('mindmap-panel').classList.add('visible');
+    }
 };
 
 window.EpubManager = EpubManager;
