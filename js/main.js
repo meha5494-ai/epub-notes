@@ -97,17 +97,13 @@ document.addEventListener('DOMContentLoaded', function() {
         continuousViewBtn.classList.add('active');
         pagedViewBtn.classList.remove('active');
 
-        // ذخیره کتاب فعلی برای refresh
         sessionStorage.setItem('currentBookData', JSON.stringify(book));
 
         try {
-            const rendition = await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
+            await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
 
-            // اعمال تنظیمات اولیه
+            // اعمال تنظیمات روی کتاب
             applySettingsToBook();
-
-            // هر بار که بخش جدید رندر شد، دوباره تنظیمات اعمال شود
-            rendition.on('rendered', section => applySettingsToBook());
 
         } catch (error) {
             console.error('Error opening book:', error);
@@ -117,32 +113,44 @@ document.addEventListener('DOMContentLoaded', function() {
         renderNotes();
     }
 
-    // ------------------------ تنظیمات کتاب ------------------------
+    // ------------------------ اعمال تنظیمات ------------------------
     function applySettingsToBook() {
-        const iframe = document.querySelector('#epub-content iframe');
-        if (!iframe) return;
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!iframeDoc || !iframeDoc.body) return;
+        if (!window.EpubManager.currentRendition) return;
+        const rendition = window.EpubManager.currentRendition;
 
-        // فونت، سایز، رنگ
         const fontSize = localStorage.getItem('fontSize') || '16px';
         const fontFamily = localStorage.getItem('fontFamily') || 'Vazirmatn, sans-serif';
         const pageColor = localStorage.getItem('pageColor') || 'light';
         const lineHeight = 1.8;
-
-        iframeDoc.body.style.fontSize = fontSize;
-        iframeDoc.body.style.fontFamily = fontFamily;
-        iframeDoc.body.style.lineHeight = lineHeight;
-        iframeDoc.body.style.direction = 'rtl';
-        iframeDoc.body.style.padding = '20px';
-
-        if (pageColor === 'light') { iframeDoc.body.style.background = '#fff'; iframeDoc.body.style.color = '#1e293b'; }
-        if (pageColor === 'sepia') { iframeDoc.body.style.background = '#f5e6d3'; iframeDoc.body.style.color = '#1e293b'; }
-        if (pageColor === 'dark') { iframeDoc.body.style.background = '#1e293b'; iframeDoc.body.style.color = '#fff'; }
-
-        // حالت خواندن
         const readingMode = localStorage.getItem('readingMode') || 'continuous';
-        window.EpubManager.setViewMode(readingMode);
+
+        // اعمال theme به currentRendition
+        rendition.themes.default({
+            'body': {
+                'font-size': fontSize,
+                'font-family': fontFamily,
+                'line-height': lineHeight,
+                'direction': 'rtl',
+                'padding': '20px'
+            },
+            'body.light': {
+                'background': '#fff',
+                'color': '#1e293b'
+            },
+            'body.sepia': {
+                'background': '#f5e6d3',
+                'color': '#1e293b'
+            },
+            'body.dark': {
+                'background': '#1e293b',
+                'color': '#fff'
+            }
+        });
+
+        rendition.themes.select(pageColor);
+
+        if (readingMode === 'continuous') rendition.flow('scrolled-doc');
+        else rendition.flow('paginated');
     }
 
     // ------------------------ دکمه‌های تنظیمات ------------------------
@@ -151,14 +159,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const setting = this.dataset.setting;
             const value = this.dataset.value;
 
-            // ذخیره در localStorage
             localStorage.setItem(setting, value);
-
-            // به‌روزرسانی حالت فعال
             document.querySelectorAll(`.setting-btn[data-setting="${setting}"]`).forEach(b=>b.classList.remove('active'));
             this.classList.add('active');
 
-            // اعمال مستقیم روی متن کتاب
             applySettingsToBook();
         });
     });
