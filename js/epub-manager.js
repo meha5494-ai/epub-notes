@@ -4,10 +4,12 @@ let currentBook = null;
 let currentRendition = null;
 
 const EpubManager = {
+    // 📚 بارگذاری و نمایش EPUB
     loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
         
         try {
+            // ایجاد ناحیه نمایش کتاب
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
             contentDiv.style.cssText = `
@@ -21,17 +23,31 @@ const EpubManager = {
             `;
             bookContainer.appendChild(contentDiv);
             
+            // ایجاد کتاب EPUB
             currentBook = ePub(file);
-            
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
                 flow: "scrolled-doc",
                 manager: "continuous"
             });
-            
-            await currentRendition.display();
-            
+
+            // ✅ بررسی موقعیت آخر مطالعه
+            const lastLocation = localStorage.getItem(`book_progress_${id}`);
+            if (lastLocation) {
+                await currentRendition.display(lastLocation);
+            } else {
+                await currentRendition.display();
+            }
+
+            // ✅ ذخیره موقعیت مطالعه هنگام تغییر صفحه
+            currentRendition.on("relocated", (location) => {
+                if (location && location.start && location.start.cfi) {
+                    localStorage.setItem(`book_progress_${id}`, location.start.cfi);
+                }
+            });
+
+            // ✅ استایل‌دهی به iframe داخلی EPUB
             setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
@@ -51,7 +67,6 @@ const EpubManager = {
                         iframeDoc.body.style.fontSize = '16px';
                         iframeDoc.body.style.color = '#1e293b';
                         iframeDoc.body.style.padding = '20px';
-                        
                         iframeDoc.documentElement.style.overflow = 'hidden';
                         iframeDoc.body.style.overflow = 'auto';
                     }
@@ -75,7 +90,7 @@ const EpubManager = {
         }
     },
 
-    // ✅ تبدیل فایل به Base64 و ذخیره پایدار
+    // ✅ استخراج اطلاعات کتاب + تبدیل به Base64 برای ذخیره پایدار
     extractBookMetadata: async (file) => {
         const toBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -101,26 +116,27 @@ const EpubManager = {
             title: file.name.replace('.epub', ''),
             author: 'ناشناس',
             cover: coverData,
-            dataUrl: bookDataUrl // ذخیره نسخه base64 فایل
+            dataUrl: bookDataUrl
         };
     },
 
+    // 📊 پیشرفت مطالعه
     updateProgress: (percent) => {
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
-        
         if (progressFill) progressFill.style.width = `${percent}%`;
         if (progressText) progressText.textContent = `${Math.round(percent)}%`;
     },
 
+    // 📄 اطلاعات صفحه فعلی
     updatePageInfo: (current, total) => {
         const pageInfo = document.getElementById('page-info');
         const pageInfoNav = document.getElementById('page-info-nav');
-        
         if (pageInfo) pageInfo.textContent = `صفحه ${current} از ${total}`;
         if (pageInfoNav) pageInfoNav.textContent = `صفحه ${current} از ${total}`;
     },
 
+    // 🧠 مایندمپ
     showMindmap: async () => {
         if (!currentBook) return;
         try {
@@ -144,7 +160,6 @@ const EpubManager = {
                 .attr("height", height)
                 .append("g")
                 .attr("transform", `translate(${width/2}, 20)`);
-            
             const root = d3.hierarchy(mindmapData);
             const treeLayout = d3.tree().size([width - 100, height - 100]);
             treeLayout(root);
@@ -185,155 +200,3 @@ const EpubManager = {
 };
 
 window.EpubManager = EpubManager;
-
-
-// ---------------------------
-//     مدیریت رابط کاربری
-// ---------------------------
-
-document.addEventListener('DOMContentLoaded', function() {
-    const bookGrid = document.getElementById('book-grid');
-    const fileInput = document.getElementById('epub-file-input');
-    const uploadBtn = document.getElementById('upload-button');
-    const backBtn = document.getElementById('back-button');
-    const readerView = document.getElementById('reader-view');
-    const libraryView = document.getElementById('library-view');
-    const prevPageBtn = document.getElementById('prev-page-btn');
-    const nextPageBtn = document.getElementById('next-page-btn');
-    const continuousViewBtn = document.getElementById('continuous-view-btn');
-    const pagedViewBtn = document.getElementById('paged-view-btn');
-    const mindmapBtn = document.getElementById('mindmap-btn');
-    const closeMindmapBtn = document.getElementById('close-mindmap');
-    const themeToggle = document.getElementById('theme-toggle');
-    
-    let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
-
-    if (backBtn) backBtn.addEventListener('click', () => {
-        readerView.classList.remove('active');
-        libraryView.classList.add('active');
-    });
-
-    if (prevPageBtn) prevPageBtn.addEventListener('click', () => window.EpubManager.prev());
-    if (nextPageBtn) nextPageBtn.addEventListener('click', () => window.EpubManager.next());
-
-    if (mindmapBtn) mindmapBtn.addEventListener('click', () => {
-        window.EpubManager.showMindmap();
-        document.getElementById('mindmap-panel').classList.add('visible');
-    });
-
-    if (closeMindmapBtn) closeMindmapBtn.addEventListener('click', () => {
-        document.getElementById('mindmap-panel').classList.remove('visible');
-    });
-
-    uploadBtn.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const bookData = await window.EpubManager.extractBookMetadata(file);
-        books.push(bookData);
-        localStorage.setItem('epubBooks', JSON.stringify(books));
-        renderLibrary();
-    });
-
-    async function openBook(book) {
-        console.log('Opening book:', book.title);
-        libraryView.classList.remove('active');
-        readerView.classList.add('active');
-        document.getElementById('reader-title').textContent = book.title;
-
-        let epubSource;
-        if (book.epubFile) {
-            epubSource = book.epubFile;
-        } else if (book.dataUrl) {
-            const res = await fetch(book.dataUrl);
-            const blob = await res.blob();
-            epubSource = blob;
-        }
-
-        try {
-            await window.EpubManager.loadEpub(book.id, epubSource, book.title);
-        } catch (error) {
-            console.error('Error opening book:', error);
-        }
-    }
-
-    function renderLibrary() {
-        bookGrid.innerHTML = '';
-        if (books.length === 0) {
-            bookGrid.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <h3>کتابخانه شما خالی است</h3>
-                    <p>برای شروع، یک کتاب EPUB اضافه کنید</p>
-                    <button class="secondary-btn" onclick="document.getElementById('upload-button').click()">
-                        <i class="fas fa-upload"></i> افزودن کتاب
-                    </button>
-                </div>`;
-            return;
-        }
-        
-        books.forEach((book, index) => {
-            const div = document.createElement('div');
-            div.className = 'book-card';
-            
-            if (book.cover) {
-                const img = document.createElement('img');
-                img.src = book.cover;
-                img.alt = book.title;
-                div.appendChild(img);
-            } else {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'book-placeholder';
-                placeholder.innerHTML = '<i class="fas fa-book-open"></i>';
-                div.appendChild(placeholder);
-            }
-            
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'book-title';
-            titleDiv.textContent = book.title;
-            div.appendChild(titleDiv);
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-book-btn';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                if (confirm('آیا از حذف این کتاب مطمئن هستید؟')) {
-                    books.splice(index, 1);
-                    localStorage.setItem('epubBooks', JSON.stringify(books));
-                    renderLibrary();
-                }
-            };
-            div.appendChild(deleteBtn);
-            
-            div.onclick = () => openBook(book);
-            bookGrid.appendChild(div);
-        });
-    }
-
-    renderLibrary();
-
-    // تم تاریک
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark');
-        const icon = themeToggle.querySelector('i');
-        if (document.body.classList.contains('dark')) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
-        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    });
-
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark');
-        const icon = themeToggle.querySelector('i');
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-    }
-});
