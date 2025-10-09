@@ -7,37 +7,29 @@ const EpubManager = {
     // 📚 بارگذاری و نمایش EPUB
     loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
-        
+
         try {
             // ایجاد ناحیه نمایش کتاب
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
-            contentDiv.style.cssText = `
-                width: 100%;
-                height: 100%;
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                overflow: auto;
-                padding: 20px;
-            `;
+            contentDiv.style.cssText = `width: 100%; height: 100%;`;
             bookContainer.appendChild(contentDiv);
-            
+
             // ایجاد کتاب EPUB
             currentBook = ePub(file);
-            currentRendition = currentBook.renderTo("epub-content", {
+            currentRendition = currentBook.renderTo(contentDiv, {
                 width: "100%",
                 height: "100%",
                 flow: "scrolled-doc",
-                manager: "continuous"
             });
+
+            // نمایش کتاب
+            await currentRendition.display();
 
             // ✅ بررسی موقعیت آخر مطالعه
             const lastLocation = localStorage.getItem(`book_progress_${id}`);
             if (lastLocation) {
                 await currentRendition.display(lastLocation);
-            } else {
-                await currentRendition.display();
             }
 
             // ✅ ذخیره موقعیت مطالعه هنگام تغییر صفحه
@@ -47,32 +39,6 @@ const EpubManager = {
                 }
             });
 
-            // ✅ استایل‌دهی به iframe داخلی EPUB
-            setTimeout(() => {
-                const iframe = document.querySelector('#epub-content iframe');
-                if (iframe) {
-                    iframe.style.cssText = `
-                        width: 100%;
-                        height: 100%;
-                        border: none;
-                        overflow: auto;
-                        background: white;
-                    `;
-                    
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    if (iframeDoc && iframeDoc.body) {
-                        iframeDoc.body.style.direction = 'rtl';
-                        iframeDoc.body.style.fontFamily = 'Vazirmatn', sans-serif;
-                        iframeDoc.body.style.lineHeight = '1.8';
-                        iframeDoc.body.style.fontSize = '16px';
-                        iframeDoc.body.style.color = '#1e293b';
-                        iframeDoc.body.style.padding = '20px';
-                        iframeDoc.documentElement.style.overflow = 'hidden';
-                        iframeDoc.body.style.overflow = 'auto';
-                    }
-                }
-            }, 1000);
-            
             return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB:', e);
@@ -146,9 +112,7 @@ const EpubManager = {
                 name: "کتاب",
                 children: toc.map(item => ({
                     name: item.label,
-                    children: item.subitems ? item.subitems.map(sub => ({
-                        name: sub.label
-                    })) : []
+                    children: item.subitems ? item.subitems.map(sub => ({ name: sub.label })) : []
                 }))
             };
             const width = 300;
