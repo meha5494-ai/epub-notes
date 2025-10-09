@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('epub-file-input');
     const uploadBtn = document.getElementById('upload-button');
     const themeToggle = document.getElementById('theme-toggle');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsBtnMobile = document.getElementById('settings-btn-mobile');
     const backBtn = document.getElementById('back-button');
     const readerView = document.getElementById('reader-view');
     const libraryView = document.getElementById('library-view');
@@ -15,37 +17,82 @@ document.addEventListener('DOMContentLoaded', function() {
     const noteText = document.getElementById('note-text');
     const addNoteBtn = document.getElementById('add-note-btn');
     
-    // دکمه‌های ناوبری صفحات
-    const prevPageBtn = document.getElementById('prev-page-btn');
-    const nextPageBtn = document.getElementById('next-page-btn');
-    
     // دکمه‌های نمایش
     const continuousViewBtn = document.getElementById('continuous-view-btn');
     const pagedViewBtn = document.getElementById('paged-view-btn');
     const mindmapBtn = document.getElementById('mindmap-btn');
     const closeMindmapBtn = document.getElementById('close-mindmap');
+    const settingsSheet = document.getElementById('settings-sheet');
+    const closeSettingsBtn = document.getElementById('close-settings');
     
     // بارگذاری کتاب‌ها از localStorage
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
+    // بررسی و بازیابی کتاب در حال خواندن پس از رفرش
+    const currentBookId = sessionStorage.getItem('currentBookId');
+    const isReaderViewActive = sessionStorage.getItem('isReaderViewActive') === 'true';
+    const bookData = sessionStorage.getItem('currentBookData');
+    
+    if (currentBookId && isReaderViewActive && bookData) {
+        const book = JSON.parse(bookData);
+        if (book) {
+            // تأخیر برای اطمینان از بارگذاری کامل صفحه
+            setTimeout(() => {
+                openBook(book);
+            }, 500);
+        }
+    }
+
     // اضافه کردن رویداد به دکمه بازگشت
     if (backBtn) {
         backBtn.addEventListener('click', function() {
+            // ذخیره موقعیت فعلی کتاب
+            if (window.currentBookId && window.EpubManager.currentRendition) {
+                window.EpubManager.currentRendition.location().then(loc => {
+                    window.EpubManager.saveReadingPosition(window.currentBookId, loc.start);
+                });
+            }
+            
             readerView.classList.remove('active');
             libraryView.classList.add('active');
+            sessionStorage.setItem('isReaderViewActive', 'false');
+            sessionStorage.removeItem('currentBookData');
         });
     }
 
-    // اضافه کردن رویداد به دکمه‌های ناویری (فقط در دسکتاپ)
-    if (prevPageBtn) {
-        prevPageBtn.addEventListener('click', function() {
-            window.EpubManager.prev();
+    // اضافه کردن رویداد به دکمه مایند مپ
+    if (mindmapBtn) {
+        mindmapBtn.addEventListener('click', function() {
+            console.log('Mindmap button clicked');
+            window.EpubManager.showMindmap();
+            document.getElementById('mindmap-panel').classList.add('visible');
         });
     }
 
-    if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', function() {
-            window.EpubManager.next();
+    if (closeMindmapBtn) {
+        closeMindmapBtn.addEventListener('click', function() {
+            document.getElementById('mindmap-panel').classList.remove('visible');
+        });
+    }
+
+    // اضافه کردن رویداد به دکمه‌های تنظیمات
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            settingsSheet.classList.toggle('visible');
+            loadSettings();
+        });
+    }
+
+    if (settingsBtnMobile) {
+        settingsBtnMobile.addEventListener('click', () => {
+            settingsSheet.classList.toggle('visible');
+            loadSettings();
+        });
+    }
+
+    if (closeSettingsBtn) {
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsSheet.classList.remove('visible');
         });
     }
 
@@ -63,20 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window.EpubManager.setViewMode('paged');
             pagedViewBtn.classList.add('active');
             continuousViewBtn.classList.remove('active');
-        });
-    }
-
-    // اضافه کردن رویداد به دکمه مایند مپ
-    if (mindmapBtn) {
-        mindmapBtn.addEventListener('click', function() {
-            window.EpubManager.showMindmap();
-            document.getElementById('mindmap-panel').classList.add('visible');
-        });
-    }
-
-    if (closeMindmapBtn) {
-        closeMindmapBtn.addEventListener('click', function() {
-            document.getElementById('mindmap-panel').classList.remove('visible');
         });
     }
 
@@ -132,15 +165,18 @@ document.addEventListener('DOMContentLoaded', function() {
             titleDiv.textContent = book.title;
             div.appendChild(titleDiv);
             
-            // دکمه حذف کتاب
+            // دکمه حذف کتاب همیشه قابل مشاهده
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-book-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.title = 'حذف کتاب';
             deleteBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (confirm('آیا از حذف این کتاب مطمئن هستید؟')) {
                     books.splice(index, 1);
                     localStorage.setItem('epubBooks', JSON.stringify(books));
+                    // حذف موقعیت خواندن
+                    window.EpubManager.clearReadingPosition(book.id);
                     renderLibrary();
                 }
             };
@@ -153,6 +189,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function openBook(book) {
         console.log('Opening book:', book.title);
+        window.currentBookId = book.id; // ذخیره ID کتاب فعلی
+        sessionStorage.setItem('currentBookId', book.id); // ذخیره در sessionStorage برای رفرش
+        sessionStorage.setItem('isReaderViewActive', 'true'); // ذخیره وضعیت صفحه خواندن
         libraryView.classList.remove('active');
         readerView.classList.add('active');
         document.getElementById('reader-title').textContent = book.title;
@@ -257,6 +296,101 @@ document.addEventListener('DOMContentLoaded', function() {
         icon.classList.remove('fa-moon');
         icon.classList.add('fa-sun');
     }
+
+    // تابع بارگذاری تنظیمات
+    function loadSettings() {
+        const fontSize = localStorage.getItem('fontSize') || 'medium';
+        const pageColor = localStorage.getItem('pageColor') || 'light';
+        const fontFamily = localStorage.getItem('fontFamily') || 'vazirmatn';
+        const readingMode = localStorage.getItem('readingMode') || 'continuous';
+        
+        // به‌روزرسانی حالت فعال دکمه‌ها
+        document.querySelectorAll('.setting-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.setting === 'font-size' && btn.dataset.value === fontSize) {
+                btn.classList.add('active');
+            }
+            if (btn.dataset.setting === 'page-color' && btn.dataset.value === pageColor) {
+                btn.classList.add('active');
+            }
+            if (btn.dataset.setting === 'font-family' && btn.dataset.value === fontFamily) {
+                btn.classList.add('active');
+            }
+            if (btn.dataset.setting === 'reading-mode' && btn.dataset.value === readingMode) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // اعمال تنظیمات
+        applySettings();
+    }
+
+    // تابع اعمال تنظیمات
+    function applySettings() {
+        const fontSize = localStorage.getItem('fontSize') || 'medium';
+        const pageColor = localStorage.getItem('pageColor') || 'light';
+        const fontFamily = localStorage.getItem('fontFamily') || 'vazirmatn';
+        const readingMode = localStorage.getItem('readingMode') || 'continuous';
+        
+        // اعمال اندازه فونت
+        document.documentElement.style.setProperty('--font-size', getFontSizeValue(fontSize));
+        
+        // اعمال رنگ صفحه
+        document.body.classList.remove('light', 'sepia', 'dark');
+        document.body.classList.add(pageColor);
+        
+        // اعمال فونت
+        document.body.style.fontFamily = getFontFamilyValue(fontFamily);
+        
+        // اعامل حالت خواندن
+        if (continuousViewBtn && pagedViewBtn) {
+            if (readingMode === 'continuous') {
+                continuousViewBtn.classList.add('active');
+                pagedViewBtn.classList.remove('active');
+            } else {
+                pagedViewBtn.classList.add('active');
+                continuousViewBtn.classList.remove('active');
+            }
+        }
+    }
+
+    function getFontSizeValue(size) {
+        switch(size) {
+            case 'small': return '14px';
+            case 'medium': return '16px';
+            case 'large': return '18px';
+            default: return '16px';
+        }
+    }
+
+    function getFontFamilyValue(family) {
+        switch(family) {
+            case 'vazirmatn': return 'Vazirmatn, sans-serif';
+            case 'yekan': return 'Yekan, sans-serif';
+            case 'samim': return 'Samim, sans-serif';
+            default: return 'Vazirmatn, sans-serif';
+        }
+    }
+
+    // رویدادهای تغییر تنظیمات
+    document.querySelectorAll('.setting-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const setting = this.dataset.setting;
+            const value = this.dataset.value;
+            
+            // ذخیره در localStorage
+            localStorage.setItem(setting, value);
+            
+            // به‌روزرسانی حالت فعال
+            document.querySelectorAll(`.setting-btn[data-setting="${setting}"]`).forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // اعمال تنظیمات
+            applySettings();
+        });
+    });
 
     renderLibrary();
 });
