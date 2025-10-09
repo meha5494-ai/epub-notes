@@ -22,57 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
 
-    // دکمه بازگشت
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            readerView.classList.remove('active');
-            libraryView.classList.add('active');
-            sessionStorage.removeItem('currentBookId');
-        });
-    }
-
-    // دکمه مایندمپ
-    if (mindmapBtn) {
-        mindmapBtn.addEventListener('click', function() {
-            window.EpubManager.showMindmap();
-            document.getElementById('mindmap-panel').classList.add('visible');
-        });
-    }
-    if (closeMindmapBtn) {
-        closeMindmapBtn.addEventListener('click', function() {
-            document.getElementById('mindmap-panel').classList.remove('visible');
-        });
-    }
-
-    // دکمه‌های نمایش
-    if (continuousViewBtn) {
-        continuousViewBtn.addEventListener('click', function() {
-            window.EpubManager.setViewMode('continuous');
-            continuousViewBtn.classList.add('active');
-            pagedViewBtn.classList.remove('active');
-            localStorage.setItem('readingMode','continuous');
-        });
-    }
-    if (pagedViewBtn) {
-        pagedViewBtn.addEventListener('click', function() {
-            window.EpubManager.setViewMode('paged');
-            pagedViewBtn.classList.add('active');
-            continuousViewBtn.classList.remove('active');
-            localStorage.setItem('readingMode','paged');
-        });
-    }
-
-    // آپلود کتاب
-    uploadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const bookData = await window.EpubManager.extractBookMetadata(file);
-        books.push(bookData);
-        localStorage.setItem('epubBooks', JSON.stringify(books));
-        renderLibrary();
-    });
-
+    // ------------------------ کتابخانه ------------------------
     function renderLibrary() {
         bookGrid.innerHTML = '';
         if (books.length === 0) {
@@ -128,6 +78,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const bookData = await window.EpubManager.extractBookMetadata(file);
+        books.push(bookData);
+        localStorage.setItem('epubBooks', JSON.stringify(books));
+        renderLibrary();
+    });
+
+    // ------------------------ باز کردن کتاب ------------------------
     async function openBook(book) {
         libraryView.classList.remove('active');
         readerView.classList.add('active');
@@ -136,34 +97,17 @@ document.addEventListener('DOMContentLoaded', function() {
         continuousViewBtn.classList.add('active');
         pagedViewBtn.classList.remove('active');
 
-        // ذخیره کتاب فعلی در sessionStorage برای refresh
-        sessionStorage.setItem('currentBookId', book.id);
+        // ذخیره کتاب فعلی برای refresh
         sessionStorage.setItem('currentBookData', JSON.stringify(book));
 
         try {
             const rendition = await window.EpubManager.loadEpub(book.id, book.epubFile, book.title);
 
-            // اعمال تنظیمات شخصی‌سازی
-            const fontSize = localStorage.getItem('fontSize') || '16px';
-            const fontFamily = localStorage.getItem('fontFamily') || 'Vazirmatn, sans-serif';
-            const pageColor = localStorage.getItem('pageColor') || 'white';
-            const lineHeight = 1.8;
+            // اعمال تنظیمات اولیه
+            applySettingsToBook();
 
-            rendition.on('rendered', (section) => {
-                const iframe = document.querySelector('#epub-content iframe');
-                if (iframe) {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    if (iframeDoc && iframeDoc.body) {
-                        iframeDoc.body.style.fontSize = fontSize;
-                        iframeDoc.body.style.fontFamily = fontFamily;
-                        iframeDoc.body.style.background = pageColor==='light'?'#fff':pageColor==='sepia'?'#f5e6d3':'#1e293b';
-                        iframeDoc.body.style.color = pageColor==='dark'?'#fff':'#1e293b';
-                        iframeDoc.body.style.lineHeight = lineHeight;
-                        iframeDoc.body.style.direction = 'rtl';
-                        iframeDoc.body.style.padding = '20px';
-                    }
-                }
-            });
+            // هر بار که بخش جدید رندر شد، دوباره تنظیمات اعمال شود
+            rendition.on('rendered', section => applySettingsToBook());
 
         } catch (error) {
             console.error('Error opening book:', error);
@@ -173,16 +117,71 @@ document.addEventListener('DOMContentLoaded', function() {
         renderNotes();
     }
 
+    // ------------------------ تنظیمات کتاب ------------------------
+    function applySettingsToBook() {
+        const iframe = document.querySelector('#epub-content iframe');
+        if (!iframe) return;
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!iframeDoc || !iframeDoc.body) return;
+
+        // فونت، سایز، رنگ
+        const fontSize = localStorage.getItem('fontSize') || '16px';
+        const fontFamily = localStorage.getItem('fontFamily') || 'Vazirmatn, sans-serif';
+        const pageColor = localStorage.getItem('pageColor') || 'light';
+        const lineHeight = 1.8;
+
+        iframeDoc.body.style.fontSize = fontSize;
+        iframeDoc.body.style.fontFamily = fontFamily;
+        iframeDoc.body.style.lineHeight = lineHeight;
+        iframeDoc.body.style.direction = 'rtl';
+        iframeDoc.body.style.padding = '20px';
+
+        if (pageColor === 'light') { iframeDoc.body.style.background = '#fff'; iframeDoc.body.style.color = '#1e293b'; }
+        if (pageColor === 'sepia') { iframeDoc.body.style.background = '#f5e6d3'; iframeDoc.body.style.color = '#1e293b'; }
+        if (pageColor === 'dark') { iframeDoc.body.style.background = '#1e293b'; iframeDoc.body.style.color = '#fff'; }
+
+        // حالت خواندن
+        const readingMode = localStorage.getItem('readingMode') || 'continuous';
+        window.EpubManager.setViewMode(readingMode);
+    }
+
+    // ------------------------ دکمه‌های تنظیمات ------------------------
+    document.querySelectorAll('.setting-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const setting = this.dataset.setting;
+            const value = this.dataset.value;
+
+            // ذخیره در localStorage
+            localStorage.setItem(setting, value);
+
+            // به‌روزرسانی حالت فعال
+            document.querySelectorAll(`.setting-btn[data-setting="${setting}"]`).forEach(b=>b.classList.remove('active'));
+            this.classList.add('active');
+
+            // اعمال مستقیم روی متن کتاب
+            applySettingsToBook();
+        });
+    });
+
+    // ------------------------ یادداشت‌ها ------------------------
+    window.NotesManager = {
+        notes: [],
+        add(note){if(note && note.trim()!==""){this.notes.push(note); this.saveToStorage();}},
+        getAll(){return this.notes;},
+        delete(index){if(index>=0 && index<this.notes.length){this.notes.splice(index,1); this.saveToStorage();}},
+        clear(){this.notes=[]; this.saveToStorage();},
+        saveToStorage(){localStorage.setItem('epubNotes',JSON.stringify(this.notes));},
+        loadFromStorage(){const saved=localStorage.getItem('epubNotes'); this.notes=saved?JSON.parse(saved):[];}
+    };
+    window.NotesManager.loadFromStorage();
+
     function renderNotes() {
         const notesList = document.getElementById('notes-list');
         const noNotesMsg = document.getElementById('no-notes-message');
         notesList.innerHTML = '';
         const notes = window.NotesManager.getAll();
-        if (notes.length === 0) {
-            noNotesMsg.style.display = 'flex';
-            return;
-        }
-        noNotesMsg.style.display = 'none';
+        if(notes.length===0){noNotesMsg.style.display='flex'; return;}
+        noNotesMsg.style.display='none';
         notes.forEach((note,index)=>{
             const div=document.createElement('div');
             div.className='note-item';
@@ -210,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(note){window.NotesManager.add(note); renderNotes(); addNotePopover.classList.remove('visible'); noteText.value='';}
     });
 
+    // ------------------------ تم ------------------------
     themeToggle.addEventListener('click',()=>{
         document.body.classList.toggle('dark');
         const icon=themeToggle.querySelector('i');
@@ -217,29 +217,15 @@ document.addEventListener('DOMContentLoaded', function() {
         else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
         localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');
     });
-
     if(localStorage.getItem('theme')==='dark'){
         document.body.classList.add('dark');
         const icon=themeToggle.querySelector('i');
         icon.classList.remove('fa-moon'); icon.classList.add('fa-sun');
     }
 
-    renderLibrary();
-
-    // باز کردن کتاب بعد از رفرش اگر موجود باشد
+    // ------------------------ باز کردن کتاب آخر بعد از refresh ------------------------
     const lastBook = sessionStorage.getItem('currentBookData');
     if(lastBook) openBook(JSON.parse(lastBook));
+
+    renderLibrary();
 });
-
-// یادداشت‌ها
-window.NotesManager={
-    notes:[],
-    add(note){if(note && note.trim()!==""){this.notes.push(note); this.saveToStorage();}},
-    getAll(){return this.notes;},
-    delete(index){if(index>=0 && index<this.notes.length){this.notes.splice(index,1); this.saveToStorage();}},
-    clear(){this.notes=[]; this.saveToStorage();},
-    saveToStorage(){localStorage.setItem('epubNotes',JSON.stringify(this.notes));},
-    loadFromStorage(){const saved=localStorage.getItem('epubNotes'); this.notes=saved?JSON.parse(saved):[];}
-};
-
-window.addEventListener('DOMContentLoaded',()=>{window.NotesManager.loadFromStorage();});
