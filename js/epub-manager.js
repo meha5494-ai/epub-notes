@@ -4,11 +4,11 @@ let currentBook = null;
 let currentRendition = null;
 
 const EpubManager = {
-    loadEpub: async (id, fileOrDataUrl, title) => {
+    loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
-
+        
         try {
-            // ✅ آماده‌سازی محیط نمایش کتاب
+            // ایجاد container با تنظیمات صحیح
             const contentDiv = document.createElement('div');
             contentDiv.id = 'epub-content';
             contentDiv.style.cssText = `
@@ -17,127 +17,198 @@ const EpubManager = {
                 background: white;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                overflow: hidden;
-                position: relative;
+                overflow: auto;
+                padding: 20px;
             `;
             bookContainer.appendChild(contentDiv);
-
-            // ✅ تشخیص اینکه فایل Blob است یا Base64
-            let source;
-            if (typeof fileOrDataUrl === 'string') {
-                // از Base64 (برای بعد از رفرش)
-                const res = await fetch(fileOrDataUrl);
-                const blob = await res.blob();
-                source = blob;
-            } else {
-                // از فایل آپلودشده
-                source = fileOrDataUrl;
-            }
-
-            // ✅ ساخت کتاب و انتظار برای باز شدن کامل
-            currentBook = ePub(source);
-            await currentBook.opened; // اضافه شده برای اطمینان از بارگذاری کامل
             
+            // ایجاد کتاب با فایل صحیح
+            currentBook = ePub(file);
+            
+            // تنظیمات رندر بهینه
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
                 flow: "scrolled-doc",
                 manager: "continuous"
             });
-
-            // ✅ اگر کاربر قبلاً این کتاب رو باز کرده، ادامه از همان صفحه
-            const lastLocation = localStorage.getItem(`book_location_${id}`);
-            if (lastLocation) {
-                await currentRendition.display(lastLocation);
-            } else {
-                await currentRendition.display();
-            }
-
-            // ✅ ذخیره موقعیت جدید هنگام ورق زدن
-            currentRendition.on("relocated", (location) => {
-                if (location && location.start && location.start.cfi) {
-                    localStorage.setItem(`book_location_${id}`, location.start.cfi);
-                }
-            });
-
-            // ✅ استایل‌دهی به iframe بعد از رندر شدن
-            currentRendition.on("rendered", () => {
+            
+            await currentRendition.display();
+            
+            // تنظیمات استایل iframe با تأخیر بیشتر
+            setTimeout(() => {
                 const iframe = document.querySelector('#epub-content iframe');
                 if (iframe) {
+                    iframe.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                        overflow: auto;
+                        background: white;
+                    `;
+                    
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     if (iframeDoc && iframeDoc.body) {
                         iframeDoc.body.style.direction = 'rtl';
-                        iframeDoc.body.style.fontFamily = 'Vazirmatn, sans-serif';
+                        iframeDoc.body.style.fontFamily = 'Vazirmatn', sans-serif;
                         iframeDoc.body.style.lineHeight = '1.8';
                         iframeDoc.body.style.fontSize = '16px';
                         iframeDoc.body.style.color = '#1e293b';
                         iframeDoc.body.style.padding = '20px';
-                        iframe.style.border = 'none';
+                        
+                        // پنهان کردن اسکرول‌بارهای اضافی
+                        iframeDoc.documentElement.style.overflow = 'hidden';
+                        iframeDoc.body.style.overflow = 'auto';
                     }
                 }
-            });
+            }, 1000);
+            
+            return currentRendition;
         } catch (e) {
             console.error('Error loading EPUB:', e);
             bookContainer.innerHTML = `
-                <div style="padding:40px;text-align:center;color:#dc2626">
+                <div class="error-container">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
                     <h3>خطا در بارگذاری کتاب</h3>
-                    <p>مشکلی در نمایش کتاب پیش آمد</p>
-                    <button onclick="location.reload()">تلاش مجدد</button>
+                    <p>متاسفانه در بارگذاری کتاب مشکلی پیش آمد</p>
+                    <button class="retry-btn" onclick="location.reload()">
+                        <i class="fas fa-redo"></i> تلاش مجدد
+                    </button>
                 </div>`;
         }
     },
 
-    // ✅ استخراج متادیتا و ذخیره Base64 در localStorage
+    updateProgress: (percent) => {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        
+        if (progressFill) {
+            progressFill.style.width = `${percent}%`;
+        }
+        if (progressText) {
+            progressText.textContent = `${Math.round(percent)}%`;
+        }
+    },
+
+    updatePageInfo: (current, total) => {
+        const pageInfo = document.getElementById('page-info');
+        const pageInfoNav = document.getElementById('page-info-nav');
+        
+        if (pageInfo) {
+            pageInfo.textContent = `صفحه ${current} از ${total}`;
+        }
+        if (pageInfoNav) {
+            pageInfoNav.textContent = `صفحه ${current} از ${total}`;
+        }
+    },
+
+    showMindmap: async () => {
+        if (!currentBook) return;
+        
+        try {
+            const toc = await currentBook.loaded.spine.getToc();
+            const mindmapContent = document.getElementById('mindmap-content');
+            
+            // ساختار داده برای مایند مپ
+            const mindmapData = {
+                name: "کتاب",
+                children: toc.map(item => ({
+                    name: item.label,
+                    children: item.subitems ? item.subitems.map(sub => ({
+                        name: sub.label
+                    })) : []
+                }))
+            };
+            
+            // ایجاد SVG برای مایند مپ
+            const width = 300;
+            const height = 400;
+            
+            // پاک کردن محتوای قبلی
+            mindmapContent.innerHTML = '';
+            
+            const svg = d3.select("#mindmap-content")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width/2}, 20)`);
+            
+            const root = d3.hierarchy(mindmapData);
+            const treeLayout = d3.tree().size([width - 100, height - 100]);
+            treeLayout(root);
+            
+            // رسم خطوط اتصال
+            svg.selectAll(".link")
+                .data(root.links())
+                .enter()
+                .append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkVertical()
+                    .x(d => d.x)
+                    .y(d => d.y));
+            
+            //绘制节点
+            const node = svg.selectAll(".node")
+                .data(root.descendants())
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+            
+            node.append("circle")
+                .attr("r", 6)
+                .style("fill", d => d.children ? "#6366f1" : "#ec4899");
+            
+            node.append("text")
+                .attr("dy", "0.31em")
+                .attr("x", d => d.children ? -10 : 10)
+                .style("text-anchor", d => d.children ? "end" : "start")
+                .text(d => d.data.name)
+                .style("font-size", "12px");
+            
+        } catch (error) {
+            console.error('Error generating mindmap:', error);
+            document.getElementById('mindmap-content').innerHTML = `
+                <div class="mindmap-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
+                </div>
+            `;
+        }
+    },
+
+    prev: () => {
+        if (currentRendition) {
+            currentRendition.prev();
+        }
+    },
+
+    next: () => {
+        if (currentRendition) {
+            currentRendition.next();
+        }
+    },
+
     extractBookMetadata: async (file) => {
-        const toBase64 = (file) => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-
-        const dataUrl = await toBase64(file);
-        const id = `${file.name}_${file.size}_${file.lastModified}`;
         const book = ePub(file);
-        await book.opened; // اضافه شده برای اطمینان از بارگذاری کامل
-
+        const bookId = file.name + file.size + file.lastModified;
+        await book.opened;
         let coverData = null;
         try {
             coverData = await book.coverUrl();
-        } catch {
-            console.warn("No cover found");
+        } catch (e) {
+            console.warn('no cover', e);
         }
-
         return {
-            id,
+            id: bookId,
             title: file.name.replace('.epub', ''),
             author: 'ناشناس',
             cover: coverData,
-            dataUrl // 👈 فایل واقعی Base64
+            epubFile: file
         };
-    },
-
-    prev: () => { if (currentRendition) currentRendition.prev(); },
-    next: () => { if (currentRendition) currentRendition.next(); },
-    
-    // ✅ اضافه شده: تغییر حالت نمایش
-    setViewMode: (mode) => {
-        if (!currentRendition) return;
-        
-        if (mode === 'continuous') {
-            currentRendition.flow('scrolled-doc');
-        } else {
-            currentRendition.flow('paginated');
-        }
-        
-        localStorage.setItem('readingMode', mode);
-    },
-    
-    // ✅ اضافه شده: نمایش مایندمپ
-    showMindmap: () => {
-        console.log('Showing mindmap...');
-        // پیاده‌سازی نمایش مایندمپ
-        document.getElementById('mindmap-panel').classList.add('visible');
     }
 };
 
