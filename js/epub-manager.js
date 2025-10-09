@@ -3,9 +3,9 @@ const bookContainer = document.getElementById('book-container');
 let currentBook = null;
 let currentRendition = null;
 
-// کلیدهای ذخیره‌سازی در localStorage
+// کلیدهای ذخیره‌سازی در sessionStorage
 const STORAGE_KEYS = {
-    CURRENT_BOOK_ID: 'epubReader_currentBookId',
+    CURRENT_BOOK: 'epubReader_currentBook',
     CURRENT_LOCATION: 'epubReader_currentLocation'
 };
 
@@ -39,13 +39,14 @@ const EpubManager = {
                 manager: "continuous"
             });
             
-            // ذخیره شناسه کتاب فعلی
-            localStorage.setItem(STORAGE_KEYS.CURRENT_BOOK_ID, id);
+            // ذخیره اطلاعات کتاب فعلی در sessionStorage
+            const bookInfo = { id, title };
+            sessionStorage.setItem(STORAGE_KEYS.CURRENT_BOOK, JSON.stringify(bookInfo));
             
             await currentRendition.display();
             
             // بازیابی مکان قبلی اگر وجود داشته باشد
-            const savedLocation = localStorage.getItem(STORAGE_KEYS.CURRENT_LOCATION);
+            const savedLocation = sessionStorage.getItem(STORAGE_KEYS.CURRENT_LOCATION);
             if (savedLocation) {
                 try {
                     const location = JSON.parse(savedLocation);
@@ -59,7 +60,7 @@ const EpubManager = {
             
             // تنظیم رویداد برای ذخیره مکان فعلی
             currentRendition.on('relocated', (location) => {
-                localStorage.setItem(STORAGE_KEYS.CURRENT_LOCATION, JSON.stringify({
+                sessionStorage.setItem(STORAGE_KEYS.CURRENT_LOCATION, JSON.stringify({
                     cfi: location.start.cfi,
                     href: location.start.href
                 }));
@@ -244,15 +245,15 @@ const EpubManager = {
     // تابع جدید برای بازیابی کتاب پس از رفرش صفحه
     restoreBook: async () => {
         try {
-            // دریافت شناسه کتاب فعلی
-            const currentBookId = localStorage.getItem(STORAGE_KEYS.CURRENT_BOOK_ID);
-            if (!currentBookId) {
-                return false;
-            }
+            // بازیابی اطلاعات کتاب فعلی
+            const savedBookInfo = sessionStorage.getItem(STORAGE_KEYS.CURRENT_BOOK);
+            if (!savedBookInfo) return false;
+            
+            const bookInfo = JSON.parse(savedBookInfo);
             
             // پیدا کردن کتاب در کتابخانه
             const books = JSON.parse(localStorage.getItem('epubBooks')) || [];
-            const bookData = books.find(book => book.id === currentBookId);
+            const bookData = books.find(book => book.id === bookInfo.id);
             
             if (!bookData) {
                 console.warn('Book not found in library');
@@ -268,7 +269,7 @@ const EpubManager = {
             const blobUrl = URL.createObjectURL(file);
             
             // بارگذاری کتاب
-            await EpubManager.loadEpub(bookData.id, blobUrl, bookData.title);
+            await EpubManager.loadEpub(bookInfo.id, blobUrl, bookInfo.title);
             
             // نمایش صفحه خواندن
             document.getElementById('library-view').classList.remove('active');
@@ -283,8 +284,8 @@ const EpubManager = {
     
     // تابع جدید برای پاک کردن وضعیت فعلی
     clearCurrentBook: () => {
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_BOOK_ID);
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_LOCATION);
+        sessionStorage.removeItem(STORAGE_KEYS.CURRENT_BOOK);
+        sessionStorage.removeItem(STORAGE_KEYS.CURRENT_LOCATION);
     }
 };
 
