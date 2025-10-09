@@ -19,20 +19,19 @@ const EpubManager = {
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 overflow: hidden;
+                position: relative;
             `;
             bookContainer.appendChild(contentDiv);
 
             currentBook = ePub(file);
-
-            // اینجا renderTo با flow: "paginated" یا "scrolled-doc"
             currentRendition = currentBook.renderTo("epub-content", {
                 width: "100%",
                 height: "100%",
                 flow: "scrolled-doc",
-                manager: "continuous",
+                manager: "continuous"
             });
 
-            // اعمال CSS بعد از لود واقعی محتوا
+            // اعمال CSS روی محتوای کتاب
             currentRendition.hooks.content.register((contents) => {
                 const doc = contents.document;
                 if (!doc) return;
@@ -58,10 +57,15 @@ const EpubManager = {
             currentRendition.on("relocated", (location) => {
                 if (location && location.start && location.start.cfi) {
                     localStorage.setItem(`book_progress_${currentBookId}`, location.start.cfi);
+
+                    // بروزرسانی نوار پیشرفت
+                    const percent = location.start.percentage * 100;
+                    EpubManager.updateProgress(percent);
+                    EpubManager.updatePageInfo(Math.ceil(percent), 100);
                 }
             });
 
-            // اطمینان از نمایش بعد از resize
+            // واکنش به resize
             window.addEventListener('resize', async () => {
                 if (currentRendition) {
                     const loc = localStorage.getItem(`book_progress_${currentBookId}`);
@@ -70,7 +74,6 @@ const EpubManager = {
             });
 
             return currentRendition;
-
         } catch (e) {
             console.error('Error loading EPUB:', e);
             bookContainer.innerHTML = `
@@ -85,6 +88,20 @@ const EpubManager = {
                     </button>
                 </div>`;
         }
+    },
+
+    updateProgress: (percent) => {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = `${Math.round(percent)}%`;
+    },
+
+    updatePageInfo: (current, total) => {
+        const pageInfo = document.getElementById('page-info');
+        const pageInfoNav = document.getElementById('page-info-nav');
+        if (pageInfo) pageInfo.textContent = `صفحه ${current} از ${total}`;
+        if (pageInfoNav) pageInfoNav.textContent = `صفحه ${current} از ${total}`;
     },
 
     prev: () => { if (currentRendition) currentRendition.prev(); },
