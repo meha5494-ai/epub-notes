@@ -3,10 +3,11 @@ const bookContainer = document.getElementById('book-container');
 let currentBook = null;
 let currentRendition = null;
 
-// کلیدهای ذخیره‌سازی در sessionStorage
+// کلیدهای ذخیره‌سازی در localStorage
 const STORAGE_KEYS = {
     CURRENT_BOOK: 'epubReader_currentBook',
-    CURRENT_LOCATION: 'epubReader_currentLocation'
+    CURRENT_LOCATION: 'epubReader_currentLocation',
+    VIEW_MODE: 'epubReader_viewMode'
 };
 
 const EpubManager = {
@@ -39,14 +40,14 @@ const EpubManager = {
                 manager: "continuous"
             });
             
-            // ذخیره اطلاعات کتاب فعلی در sessionStorage
+            // ذخیره اطلاعات کتاب فعلی در localStorage
             const bookInfo = { id, title };
-            sessionStorage.setItem(STORAGE_KEYS.CURRENT_BOOK, JSON.stringify(bookInfo));
+            localStorage.setItem(STORAGE_KEYS.CURRENT_BOOK, JSON.stringify(bookInfo));
             
             await currentRendition.display();
             
             // بازیابی مکان قبلی اگر وجود داشته باشد
-            const savedLocation = sessionStorage.getItem(STORAGE_KEYS.CURRENT_LOCATION);
+            const savedLocation = localStorage.getItem(STORAGE_KEYS.CURRENT_LOCATION);
             if (savedLocation) {
                 try {
                     const location = JSON.parse(savedLocation);
@@ -60,7 +61,7 @@ const EpubManager = {
             
             // تنظیم رویداد برای ذخیره مکان فعلی
             currentRendition.on('relocated', (location) => {
-                sessionStorage.setItem(STORAGE_KEYS.CURRENT_LOCATION, JSON.stringify({
+                localStorage.setItem(STORAGE_KEYS.CURRENT_LOCATION, JSON.stringify({
                     cfi: location.start.cfi,
                     href: location.start.href
                 }));
@@ -246,7 +247,7 @@ const EpubManager = {
     restoreBook: async () => {
         try {
             // بازیابی اطلاعات کتاب فعلی
-            const savedBookInfo = sessionStorage.getItem(STORAGE_KEYS.CURRENT_BOOK);
+            const savedBookInfo = localStorage.getItem(STORAGE_KEYS.CURRENT_BOOK);
             if (!savedBookInfo) return false;
             
             const bookInfo = JSON.parse(savedBookInfo);
@@ -280,12 +281,6 @@ const EpubManager = {
             console.error('Error restoring book:', error);
             return false;
         }
-    },
-    
-    // تابع جدید برای پاک کردن وضعیت فعلی
-    clearCurrentBook: () => {
-        sessionStorage.removeItem(STORAGE_KEYS.CURRENT_BOOK);
-        sessionStorage.removeItem(STORAGE_KEYS.CURRENT_LOCATION);
     }
 };
 
@@ -300,13 +295,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         // اگر کتابی بازیابی نشد، کتابخانه را نمایش بده
         document.getElementById('library-view').classList.add('active');
     }
-});
-
-// اصلاح رویداد بازگشت به کتابخانه
-document.getElementById('back-button').addEventListener('click', function() {
-    // پاک کردن وضعیت کتاب فعلی
-    EpubManager.clearCurrentBook();
-    
-    document.getElementById('reader-view').classList.remove('active');
-    document.getElementById('library-view').classList.add('active');
 });
