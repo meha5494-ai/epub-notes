@@ -2,12 +2,14 @@ const bookContainer = document.getElementById('book-container');
 
 let currentBook = null;
 let currentRendition = null;
+let currentBookId = null;
 
 const EpubManager = {
     // 📚 بارگذاری و نمایش EPUB
     loadEpub: async (id, file, title) => {
         bookContainer.innerHTML = '';
-        
+        currentBookId = id;
+
         try {
             // ایجاد ناحیه نمایش کتاب
             const contentDiv = document.createElement('div');
@@ -20,9 +22,33 @@ const EpubManager = {
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 overflow: auto;
                 padding: 20px;
+                position: relative;
             `;
             bookContainer.appendChild(contentDiv);
-            
+
+            // ✅ دکمه بوکمارک بالا سمت راست
+            const bookmarkBtn = document.createElement('button');
+            bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
+            bookmarkBtn.title = 'افزودن به نشانک‌ها';
+            bookmarkBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 100;
+                background: #facc15;
+                color: #1e293b;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 12px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: all 0.3s ease;
+            `;
+            bookmarkBtn.addEventListener('mouseenter', () => bookmarkBtn.style.background = '#eab308');
+            bookmarkBtn.addEventListener('mouseleave', () => bookmarkBtn.style.background = '#facc15');
+            bookmarkBtn.addEventListener('click', () => EpubManager.addBookmark());
+            contentDiv.appendChild(bookmarkBtn);
+
             // ایجاد کتاب EPUB
             currentBook = ePub(file);
             currentRendition = currentBook.renderTo("epub-content", {
@@ -72,8 +98,7 @@ const EpubManager = {
                     }
                 }
             }, 1000);
-            
-            return currentRendition;
+
         } catch (e) {
             console.error('Error loading EPUB:', e);
             bookContainer.innerHTML = `
@@ -90,7 +115,49 @@ const EpubManager = {
         }
     },
 
-    // ✅ استخراج اطلاعات کتاب + تبدیل به Base64 برای ذخیره پایدار
+    // ✅ افزودن نشانک جدید
+    addBookmark: async () => {
+        if (!currentRendition || !currentBookId) return;
+        const loc = currentRendition.currentLocation();
+        if (!loc || !loc.start || !loc.start.cfi) return;
+
+        const cfi = loc.start.cfi;
+        const bookmarksKey = `bookmarks_${currentBookId}`;
+        const bookmarks = JSON.parse(localStorage.getItem(bookmarksKey) || '[]');
+
+        const newBookmark = {
+            cfi,
+            label: `صفحه ${bookmarks.length + 1}`,
+            date: new Date().toLocaleString('fa-IR')
+        };
+
+        bookmarks.push(newBookmark);
+        localStorage.setItem(bookmarksKey, JSON.stringify(bookmarks));
+
+        // افکت ساده برای دکمه
+        const btn = document.querySelector('#epub-content button');
+        btn.style.background = '#4ade80';
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            btn.style.background = '#facc15';
+            btn.innerHTML = '<i class="fas fa-bookmark"></i>';
+        }, 1000);
+    },
+
+    // ✅ نمایش لیست بوکمارک‌ها (در آینده می‌تونی در منو نشون بدی)
+    getBookmarks: () => {
+        if (!currentBookId) return [];
+        return JSON.parse(localStorage.getItem(`bookmarks_${currentBookId}`) || '[]');
+    },
+
+    // ✅ رفتن به نشانک خاص
+    goToBookmark: async (cfi) => {
+        if (currentRendition) {
+            await currentRendition.display(cfi);
+        }
+    },
+
+    // 📄 استخراج متادیتا و ذخیره فایل به Base64
     extractBookMetadata: async (file) => {
         const toBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -118,81 +185,6 @@ const EpubManager = {
             cover: coverData,
             dataUrl: bookDataUrl
         };
-    },
-
-    // 📊 پیشرفت مطالعه
-    updateProgress: (percent) => {
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-        if (progressFill) progressFill.style.width = `${percent}%`;
-        if (progressText) progressText.textContent = `${Math.round(percent)}%`;
-    },
-
-    // 📄 اطلاعات صفحه فعلی
-    updatePageInfo: (current, total) => {
-        const pageInfo = document.getElementById('page-info');
-        const pageInfoNav = document.getElementById('page-info-nav');
-        if (pageInfo) pageInfo.textContent = `صفحه ${current} از ${total}`;
-        if (pageInfoNav) pageInfoNav.textContent = `صفحه ${current} از ${total}`;
-    },
-
-    // 🧠 مایندمپ
-    showMindmap: async () => {
-        if (!currentBook) return;
-        try {
-            const toc = await currentBook.loaded.spine.getToc();
-            const mindmapContent = document.getElementById('mindmap-content');
-            const mindmapData = {
-                name: "کتاب",
-                children: toc.map(item => ({
-                    name: item.label,
-                    children: item.subitems ? item.subitems.map(sub => ({
-                        name: sub.label
-                    })) : []
-                }))
-            };
-            const width = 300;
-            const height = 400;
-            mindmapContent.innerHTML = '';
-            const svg = d3.select("#mindmap-content")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", `translate(${width/2}, 20)`);
-            const root = d3.hierarchy(mindmapData);
-            const treeLayout = d3.tree().size([width - 100, height - 100]);
-            treeLayout(root);
-            svg.selectAll(".link")
-                .data(root.links())
-                .enter()
-                .append("path")
-                .attr("class", "link")
-                .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
-            const node = svg.selectAll(".node")
-                .data(root.descendants())
-                .enter()
-                .append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.x},${d.y})`);
-            node.append("circle")
-                .attr("r", 6)
-                .style("fill", d => d.children ? "#6366f1" : "#ec4899");
-            node.append("text")
-                .attr("dy", "0.31em")
-                .attr("x", d => d.children ? -10 : 10)
-                .style("text-anchor", d => d.children ? "end" : "start")
-                .text(d => d.data.name)
-                .style("font-size", "12px");
-        } catch (error) {
-            console.error('Error generating mindmap:', error);
-            document.getElementById('mindmap-content').innerHTML = `
-                <div class="mindmap-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>در ایجاد مایند مپ خطایی رخ داد</p>
-                </div>
-            `;
-        }
     },
 
     prev: () => { if (currentRendition) currentRendition.prev(); },
