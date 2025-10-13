@@ -69,8 +69,35 @@ const EpubManager = {
                 };
                 reader.readAsDataURL(file);
             } else if (typeof file === 'string') {
-                // اگر فایل یک URL باشد (مثل Blob URL)، نیازی به ذخیره مجدد نیست
-                console.log('File is a URL, skipping save to localStorage');
+                // اگر فایل یک URL باشد، آن را به Blob تبدیل کرده و ذخیره کنیم
+                try {
+                    const response = await fetch(file);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        try {
+                            const bookData = {
+                                id,
+                                title,
+                                fileName: `${id}.epub`,
+                                fileType: blob.type,
+                                content: reader.result // Base64 string
+                            };
+                            let books = JSON.parse(localStorage.getItem('epubBooks')) || [];
+                            books = books.filter(book => book.id !== id); // حذف کتاب قبلی با همین id
+                            books.push(bookData);
+                            localStorage.setItem('epubBooks', JSON.stringify(books));
+                        } catch (e) {
+                            console.error('Error saving URL-based book to localStorage:', e);
+                        }
+                    };
+                    reader.onerror = () => {
+                        console.error('Error reading URL-based file:', reader.error);
+                    };
+                    reader.readAsDataURL(blob);
+                } catch (e) {
+                    console.error('Error fetching file from URL:', e);
+                }
             }
             
             await currentRendition.display();
@@ -275,72 +302,4 @@ const EpubManager = {
     // تابع اصلاح‌شده برای بازیابی کتاب پس از رفرش صفحه
     restoreBook: async () => {
         try {
-            // بازیابی اطلاعات کتاب فعلی
-            const savedBookInfo = localStorage.getItem(STORAGE_KEYS.CURRENT_BOOK);
-            if (!savedBookInfo) {
-                console.warn('No saved book info found');
-                return false;
-            }
-            
-            const bookInfo = JSON.parse(savedBookInfo);
-            
-            // پیدا کردن کتاب در کتابخانه
-            const books = JSON.parse(localStorage.getItem('epubBooks')) || [];
-            const bookData = books.find(book => book.id === bookInfo.id);
-            
-            if (!bookData || !bookData.content) {
-                console.warn('Book not found in library or content missing');
-                return false;
-            }
-            
-            // تبدیل Base64 به Blob
-            const byteString = atob(bookData.content.split(',')[1]);
-            const mimeString = bookData.content.split(',')[0].split(':')[1].split(';')[0];
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            const blob = new Blob([ab], { type: mimeString });
-            const file = new File([blob], bookData.fileName, { type: bookData.fileType });
-            
-            // ایجاد Blob URL موقت
-            const blobUrl = URL.createObjectURL(file);
-            
-            try {
-                // بارگذاری کتاب
-                await EpubManager.loadEpub(bookInfo.id, blobUrl, bookInfo.title);
-                
-                // نمایش صفحه خواندن
-                document.getElementById('library-view').classList.remove('active');
-                document.getElementById('reader-view').classList.add('active');
-                
-                // آزادسازی Blob URL پس از استفاده
-                setTimeout(() => {
-                    URL.revokeObjectURL(blobUrl);
-                }, 1000);
-                
-                return true;
-            } catch (e) {
-                console.error('Error loading book in restoreBook:', e);
-                return false;
-            }
-        } catch (error) {
-            console.error('Error restoring book:', error);
-            return false;
-        }
-    }
-};
-
-window.EpubManager = EpubManager;
-
-// تابعی برای اجرا پس از بارگذاری صفحه
-document.addEventListener('DOMContentLoaded', async () => {
-    // تلاش برای بازیابی کتاب قبلی
-    const restored = await EpubManager.restoreBook();
-    
-    if (!restored) {
-        // اگر کتابی بازیابی نشد، کتابخانه را نمایش بده
-        document.getElementById('library-view').classList.add('active');
-    }
-});
+           
